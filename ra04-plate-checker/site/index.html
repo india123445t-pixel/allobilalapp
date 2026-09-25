@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>واش خاصني نبدل بلاكة السيارة؟ — أداة قرار 2026</title>
+  <meta name="description" content="أداة إرشادية مبنية على القرار 640.26 لمعرفة قاعدة الانتقال المناسبة للوحة تسجيل المركبة في المغرب.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell nav">
+      <div class="brand">PlateCheck Maroc <span class="badge">نسخة تجريبية</span></div>
+      <div class="lang-switch" aria-label="Language">
+        <button type="button" data-lang-switch="ar" aria-pressed="true">العربية</button>
+        <button type="button" data-lang-switch="fr" aria-pressed="false">Français</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow" data-ar="قرار 640.26 • المغرب 2026" data-fr="Décision 640.26 • Maroc 2026">قرار 640.26 • المغرب 2026</div>
+        <h1 data-ar="واش خاصني نبدل البلاكة دابا؟" data-fr="Dois-je changer ma plaque maintenant ?">واش خاصني نبدل البلاكة دابا؟</h1>
+        <p class="lead" data-ar="جاوب على أسئلة قصيرة بلا رقم التسجيل وبلا أي بيانات شخصية. النتيجة توضّح القاعدة الانتقالية المناسبة مع رابط المصدر الرسمي." data-fr="Répondez à quelques questions sans numéro d’immatriculation ni donnée personnelle. Le résultat indique la règle transitoire pertinente avec la source officielle.">جاوب على أسئلة قصيرة بلا رقم التسجيل وبلا أي بيانات شخصية. النتيجة توضّح القاعدة الانتقالية المناسبة مع رابط المصدر الرسمي.</p>
+      </div>
+      <aside class="trust-card">
+        <strong data-ar="شنو ما كتديرش هاد الأداة" data-fr="Ce que cet outil ne fait pas">شنو ما كتديرش هاد الأداة</strong>
+        <p data-ar="ما كتجمع حتى معلومة شخصية، ما كتخزنش الأجوبة، وما كتقولش أنها نارسا أو جهة حكومية. الحالات الخاصة كتتحول للتحقق الرسمي." data-fr="Elle ne collecte aucune donnée personnelle, ne stocke pas vos réponses et ne se présente pas comme la NARSA ou une administration. Les cas particuliers sont renvoyés vers une vérification officielle.">ما كتجمع حتى معلومة شخصية، ما كتخزنش الأجوبة، وما كتقولش أنها نارسا أو جهة حكومية. الحالات الخاصة كتتحول للتحقق الرسمي.</p>
+      </aside>
+    </section>
+
+    <section class="grid" aria-label="Checker and visual guide">
+      <div class="card">
+        <h2 data-ar="تحقق من حالتك" data-fr="Vérifiez votre situation">تحقق من حالتك</h2>
+        <form id="checker-form" novalidate>
+          <fieldset class="field">
+            <legend data-ar="1. نوع المركبة" data-fr="1. Type de véhicule">1. نوع المركبة</legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="category" value="normal"> <span data-ar="سيارة/مركبة من السلسلة العادية" data-fr="Voiture/véhicule de la série normale">سيارة/مركبة من السلسلة العادية</span></label>
+              <label class="option"><input type="radio" name="category" value="light"> <span data-ar="دراجة بمحرك أو ثلاثية/رباعية عجلات خفيفة" data-fr="Cyclomoteur ou tricycle/quadricycle léger">دراجة بمحرك أو ثلاثية/رباعية عجلات خفيفة</span></label>
+              <label class="option"><input type="radio" name="category" value="other"> <span data-ar="فئة أخرى / غير متأكد" data-fr="Autre catégorie / incertain">فئة أخرى / غير متأكد</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend data-ar="2. شنو نوع اللوحة الحالية؟" data-fr="2. Quel est votre type de plaque actuel ?">2. شنو نوع اللوحة الحالية؟</legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="plateType" value="old_domestic"> <span data-ar="قديمة للاستعمال داخل المغرب، بلا حروف لاتينية" data-fr="Ancienne nationale, sans caractères latins">قديمة للاستعمال داخل المغرب، بلا حروف لاتينية</span></label>
+              <label class="option"><input type="radio" name="plateType" value="old_international"> <span data-ar="قديمة للجولان الدولي، فيها حروف لاتينية وMA منفصلة" data-fr="Ancienne internationale, caractères latins + MA séparé">قديمة للجولان الدولي، فيها حروف لاتينية وMA منفصلة</span></label>
+              <label class="option"><input type="radio" name="plateType" value="new_unified"> <span data-ar="النموذج الموحّد الجديد" data-fr="Nouveau modèle unifié">النموذج الموحّد الجديد</span></label>
+              <label class="option"><input type="radio" name="plateType" value="unsure"> <span data-ar="ما متأكدش" data-fr="Je ne sais pas">ما متأكدش</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend data-ar="3. شنو العملية الحالية؟" data-fr="3. Quelle opération est en cours ?">3. شنو العملية الحالية؟</legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="operation" value="none"> <span data-ar="ما كاينة حتى عملية، غير بغيت نعرف" data-fr="Aucune opération, je veux seulement vérifier">ما كاينة حتى عملية، غير بغيت نعرف</span></label>
+              <label class="option"><input type="radio" name="operation" value="transfer"> <span data-ar="تحويل/نقل الملكية" data-fr="Transfert de propriété">تحويل/نقل الملكية</span></label>
+              <label class="option"><input type="radio" name="operation" value="new_imported"> <span data-ar="تسجيل مركبة مقتناة/مستوردة جديدة أو مستعملة" data-fr="Immatriculation d’un véhicule acquis/importé, neuf ou d’occasion">تسجيل مركبة مقتناة/مستوردة جديدة أو مستعملة</span></label>
+              <label class="option"><input type="radio" name="operation" value="duplicate_replace"> <span data-ar="طلب نظير أو استبدال سند الملكية/الوثيقة" data-fr="Duplicata ou remplacement du titre/document">طلب نظير أو استبدال سند الملكية/الوثيقة</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend data-ar="4. واش كتستعمل المركبة خارج المغرب؟" data-fr="4. Utilisez-vous le véhicule à l’étranger ?">4. واش كتستعمل المركبة خارج المغرب؟</legend>
+            <div class="options">
+              <label class="option"><input type="radio" name="internationalUse" value="no"> <span data-ar="لا / داخل المغرب" data-fr="Non / au Maroc">لا / داخل المغرب</span></label>
+              <label class="option"><input type="radio" name="internationalUse" value="yes"> <span data-ar="نعم / جولان دولي" data-fr="Oui / circulation internationale">نعم / جولان دولي</span></label>
+            </div>
+          </fieldset>
+
+          <button class="primary" type="submit" data-ar="عطيني النتيجة" data-fr="Voir mon résultat">عطيني النتيجة</button>
+        </form>
+        <div id="result-box" class="result" hidden aria-live="polite"></div>
+      </div>
+
+      <div class="card">
+        <h2 data-ar="كيف تميّز اللوحة بصرياً؟" data-fr="Comment distinguer visuellement les plaques ?">كيف تميّز اللوحة بصرياً؟</h2>
+        <p class="plate-note" data-ar="الرسومات التالية توضيحية فقط وليست نسخة بالأبعاد الرسمية." data-fr="Les schémas ci-dessous sont illustratifs et ne reproduisent pas les dimensions réglementaires.">الرسومات التالية توضيحية فقط وليست نسخة بالأبعاد الرسمية.</p>
+        <div class="visual-stack">
+          <div class="plate-card">
+            <strong data-ar="قديمة — استعمال داخلي" data-fr="Ancienne — usage national">قديمة — استعمال داخلي</strong>
+            <div class="plate"><span>12345</span><span>أ</span><span>40</span></div>
+            <p class="plate-note" data-ar="بلا الحرف اللاتيني وبلا MA داخل اللوحة." data-fr="Sans équivalent latin et sans MA intégré à la plaque.">بلا الحرف اللاتيني وبلا MA داخل اللوحة.</p>
+          </div>
+          <div class="plate-card">
+            <strong data-ar="قديمة — جولان دولي" data-fr="Ancienne — circulation internationale">قديمة — جولان دولي</strong>
+            <div class="plate"><span>12345</span><span>A</span><span>40</span><small>MA منفصلة</small></div>
+            <p class="plate-note" data-ar="هي الحالة المرتبطة بمهلة 31 دجنبر 2026." data-fr="C’est le cas associé à l’échéance du 31 décembre 2026.">هي الحالة المرتبطة بمهلة 31 دجنبر 2026.</p>
+          </div>
+          <div class="plate-card">
+            <strong data-ar="النموذج الموحّد الجديد" data-fr="Nouveau modèle unifié">النموذج الموحّد الجديد</strong>
+            <div class="plate"><span>MA</span><span>12345</span><span>أ<br><small>A</small></span><span>40</span></div>
+            <p class="plate-note" data-ar="علامة MA والحرف العربي ومقابله اللاتيني ضمن النموذج الموحّد." data-fr="Le signe MA et la lettre arabe avec son équivalent latin font partie du modèle unifié.">علامة MA والحرف العربي ومقابله اللاتيني ضمن النموذج الموحّد.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="timeline">
+      <h2 data-ar="الخط الزمني المختصر" data-fr="Chronologie courte">الخط الزمني المختصر</h2>
+      <div class="timeline-list">
+        <div class="milestone"><time>03-08-2026</time><span data-ar="نشر القرار 640.26 في الجريدة الرسمية 7531 واعتماد النموذج الموحّد للعمليات الجديدة ذات الصلة." data-fr="Publication de la décision 640.26 au BO 7531 et adoption du modèle unifié pour les opérations concernées.">نشر القرار 640.26 في الجريدة الرسمية 7531 واعتماد النموذج الموحّد للعمليات الجديدة ذات الصلة.</span></div>
+        <div class="milestone"><time>31-12-2026</time><span data-ar="نهاية صلاحية اللوحات القديمة المستعملة للجولان الدولي — ليست مهلة عامة لكل المركبات." data-fr="Fin de validité de l’ancienne plaque utilisée en circulation internationale — ce n’est pas une échéance générale.">نهاية صلاحية اللوحات القديمة المستعملة للجولان الدولي — ليست مهلة عامة لكل المركبات.</span></div>
+        <div class="milestone"><time>01-01-2027</time><span data-ar="دخول المقتضيات الخاصة بفئات الدراجات والمحركات الخفيفة المحددة في القرار حيز التنفيذ." data-fr="Entrée en vigueur des dispositions concernant les catégories légères visées par la décision.">دخول المقتضيات الخاصة بفئات الدراجات والمحركات الخفيفة المحددة في القرار حيز التنفيذ.</span></div>
+      </div>
+    </section>
+
+    <section class="sources card sources">
+      <h2 data-ar="المصادر والمنهجية والخصوصية" data-fr="Sources, méthode et confidentialité">المصادر والمنهجية والخصوصية</h2>
+      <ul>
+        <li><a href="https://www.sgg.gov.ma/BO/AR/3111/2026/BO_7531_Ar.pdf" target="_blank" rel="noopener">Bulletin Officiel n°7531 — décision 640.26</a></li>
+        <li><a href="https://snrtnews.com/fr/article/est-ce-vrai-que-toutes-les-plaques-doivent-etre-changees-avant-le-31-decembre-2026-158007" target="_blank" rel="noopener">Clarification NARSA/MAP — 04-09-2026</a></li>
+      </ul>
+      <p data-ar="المنهجية: النتيجة لا تستعمل رقم التسجيل ولا أي معرف شخصي؛ تطابق فقط أجوبتك مع الفروع الانتقالية التي تم التحقق منها. إذا كانت الحالة غير مغطاة بوضوح، الأداة لا تخمّن وتطلب التحقق الرسمي." data-fr="Méthode : le résultat n’utilise ni numéro d’immatriculation ni identifiant personnel ; il met seulement vos réponses en correspondance avec les règles transitoires vérifiées. Si le cas n’est pas clairement couvert, l’outil ne devine pas et demande une vérification officielle.">المنهجية: النتيجة لا تستعمل رقم التسجيل ولا أي معرف شخصي؛ تطابق فقط أجوبتك مع الفروع الانتقالية التي تم التحقق منها. إذا كانت الحالة غير مغطاة بوضوح، الأداة لا تخمّن وتطلب التحقق الرسمي.</p>
+      <p><strong data-ar="آخر تحقق:" data-fr="Dernière vérification :">آخر تحقق:</strong> 25-09-2026</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell" data-ar="مسودة MVP محلية — غير منشورة — لا إعلانات ولا تتبع ولا جمع بيانات." data-fr="Brouillon MVP local — non publié — sans publicité, suivi ni collecte de données.">مسودة MVP محلية — غير منشورة — لا إعلانات ولا تتبع ولا جمع بيانات.</div>
+  </footer>
+  <script src="checker.js"></script>
+</body>
+</html>
