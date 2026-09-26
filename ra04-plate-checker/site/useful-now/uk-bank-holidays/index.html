@@ -65,25 +65,29 @@ const SNAP={
 ["New Year’s Day","2027-01-01"],["St Patrick’s Day","2027-03-17"],["Good Friday","2027-03-26"],["Easter Monday","2027-03-29"],["Early May bank holiday","2027-05-03"],["Spring bank holiday","2027-05-31"],["Battle of the Boyne (Orangemen’s Day)","2027-07-12"],["Summer bank holiday","2027-08-30"],["Christmas Day","2027-12-27"],["Boxing Day","2027-12-28"],
 ["New Year’s Day","2028-01-03"],["St Patrick’s Day","2028-03-17"],["Good Friday","2028-04-14"],["Easter Monday","2028-04-17"],["Early May bank holiday","2028-05-01"],["Spring bank holiday","2028-05-29"],["Battle of the Boyne (Orangemen’s Day)","2028-07-12"],["Summer bank holiday","2028-08-28"],["Christmas Day","2028-12-25"],["Boxing Day","2028-12-26"]]};
 let data=JSON.parse(JSON.stringify(SNAP));
-const D=s=>new Date(s+"T00:00:00"), iso=d=>d.toISOString().slice(0,10);
-const fmt=d=>new Intl.DateTimeFormat('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d);
+const dayNum=s=>{const [y,m,d]=s.split('-').map(Number);return Date.UTC(y,m-1,d)/86400000};
+const keyFromUTC=d=>d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+const dateFromKey=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(Date.UTC(y,m-1,d))};
+const londonToday=()=>{const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
+const addDays=(s,n)=>{const d=dateFromKey(s);d.setUTCDate(d.getUTCDate()+n);return keyFromUTC(d)};
+const fmt=s=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(dateFromKey(s));
 function regionName(k){return k==='england-and-wales'?'England & Wales':k==='scotland'?'Scotland':'Northern Ireland'}
 function renderToday(){
- const k=document.getElementById('region').value, now=new Date();now.setHours(0,0,0,0);const s=iso(now), arr=data[k]||[];
- const cur=arr.find(x=>x[1]===s), next=arr.find(x=>D(x[1])>now), box=document.getElementById('todayAnswer');
- if(cur){box.innerHTML='<strong>Yes — today is '+cur[0]+'.</strong><br>'+regionName(k)+' · '+fmt(now);}
- else if(next){const n=D(next[1]), days=Math.ceil((n-now)/86400000);box.innerHTML='<strong>No — today is not a bank holiday in '+regionName(k)+'.</strong><br>Next: '+next[0]+' on '+fmt(n)+' ('+days+' day'+(days===1?'':'s')+' away).';}
+ const k=document.getElementById('region').value, s=londonToday(), arr=data[k]||[];
+ const cur=arr.find(x=>x[1]===s), next=arr.find(x=>x[1]>s), box=document.getElementById('todayAnswer');
+ if(cur){box.innerHTML='<strong>Yes — today is '+cur[0]+'.</strong><br>'+regionName(k)+' · '+fmt(s);}
+ else if(next){const days=dayNum(next[1])-dayNum(s);box.innerHTML='<strong>No — today is not a bank holiday in '+regionName(k)+'.</strong><br>Next: '+next[0]+' on '+fmt(next[1])+' ('+days+' day'+(days===1?'':'s')+' away).';}
  else box.innerHTML='<strong>No future date is available in the current feed snapshot.</strong>';
 }
 function calculate(){
  const a=document.getElementById('start').value,b=document.getElementById('end').value,k=document.getElementById('calcRegion').value;
- if(!a||!b)return;let s=D(a),e=D(b);if(s>e)[s,e]=[e,s];
+ if(!a||!b)return;let s=a,e=b;if(s>e)[s,e]=[e,s];
  const set=new Map((data[k]||[]).map(x=>[x[1],x[0]]));let cal=0,we=0,bh=0,work=0,used=[];
- for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){cal++;const key=iso(d),day=d.getDay();if(day===0||day===6){we++;continue}if(set.has(key)){bh++;used.push(set.get(key)+' — '+fmt(new Date(d)));continue}work++}
+ for(let n=dayNum(s);n<=dayNum(e);n++){cal++;const d=new Date(n*86400000),key=keyFromUTC(d),day=d.getUTCDay();if(day===0||day===6){we++;continue}if(set.has(key)){bh++;used.push(set.get(key)+' — '+fmt(key));continue}work++}
  document.getElementById('working').textContent=work;document.getElementById('calendar').textContent=cal;document.getElementById('weekend').textContent=we;document.getElementById('holidays').textContent=bh;document.getElementById('holidayList').innerHTML=used.length?'<p><strong>Excluded bank holidays:</strong><br>'+used.join('<br>')+'</p>':'<p>No weekday bank holidays fall inside this range.</p>';
 }
 document.getElementById('checkToday').onclick=renderToday;document.getElementById('region').onchange=renderToday;document.getElementById('calc').onclick=calculate;
-const n=new Date();document.getElementById('start').value=iso(n);const e=new Date(n);e.setDate(e.getDate()+30);document.getElementById('end').value=iso(e);
+const todayKey=londonToday();document.getElementById('start').value=todayKey;document.getElementById('end').value=addDays(todayKey,30);
 fetch('https://www.gov.uk/bank-holidays.json').then(r=>r.ok?r.json():Promise.reject()).then(j=>{
  for(const k of Object.keys(SNAP)){if(j[k]&&j[k].events)data[k]=j[k].events.map(x=>[x.title,x.date])}
  document.getElementById('feedStatus').textContent='Live GOV.UK feed loaded.';renderToday();
