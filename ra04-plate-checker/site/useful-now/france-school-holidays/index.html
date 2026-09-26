@@ -96,21 +96,21 @@ C:[
 ["Pont de l’Ascension","2027-05-07","2027-05-08"],
 ["Vacances d’été","2027-07-03","2027-09-02"]]};
 const academy=document.getElementById('academy'), answer=document.getElementById('answer');
-const fmt=d=>new Intl.DateTimeFormat('fr-FR',{dateStyle:'long'}).format(d);
-const d0=s=>new Date(s+'T00:00:00');
-const days=(a,b)=>Math.ceil((b-a)/86400000);
+const dayNum=s=>{const [y,m,d]=s.split('-').map(Number);return Date.UTC(y,m-1,d)/86400000};
+const parisToday=()=>{const p=Object.fromEntries(new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
+const fmt=s=>{const [y,m,d]=s.split('-').map(Number);return new Intl.DateTimeFormat('fr-FR',{timeZone:'UTC',dateStyle:'long'}).format(new Date(Date.UTC(y,m-1,d)))};
 function render(){
  const a=academy.value;if(!a){answer.className='answer';answer.textContent='Sélectionnez une académie.';return}
- const z=zoneByAcademy[a], now=new Date();now.setHours(0,0,0,0);
- const list=H[z]; const current=list.find(x=>now>=d0(x[1])&&now<d0(x[2]));
- const next=list.find(x=>d0(x[1])>now);
+ const z=zoneByAcademy[a], today=parisToday();
+ const list=H[z]; const current=list.find(x=>today>=x[1]&&today<x[2]);
+ const next=list.find(x=>x[1]>today);
  const p=new URLSearchParams(location.search);p.set('academy',a);history.replaceState(null,'','?'+p.toString());
  if(current){
-   const end=d0(current[2]);answer.className='answer ok';
-   answer.innerHTML='<strong>Oui — '+a+' (zone '+z+') est en '+current[0].toLowerCase()+'.</strong><br>Reprise : '+fmt(end)+'. Il reste environ '+Math.max(0,days(now,end))+' jour(s) avant la reprise.';
+   answer.className='answer ok';
+   answer.innerHTML='<strong>Oui — '+a+' (zone '+z+') est en '+current[0].toLowerCase()+'.</strong><br>Reprise : '+fmt(current[2])+'. Il reste environ '+Math.max(0,dayNum(current[2])-dayNum(today))+' jour(s) avant la reprise.';
  } else if(next){
-   const start=d0(next[1]);answer.className='answer soon';
-   answer.innerHTML='<strong>Non — '+a+' est en zone '+z+'.</strong><br>Prochaine période : '+next[0]+' à partir du '+fmt(start)+', soit dans '+Math.max(0,days(now,start))+' jour(s).';
+   answer.className='answer soon';
+   answer.innerHTML='<strong>Non — '+a+' est en zone '+z+'.</strong><br>Prochaine période : '+next[0]+' à partir du '+fmt(next[1])+', soit dans '+Math.max(0,dayNum(next[1])-dayNum(today))+' jour(s).';
  } else {
    answer.className='answer';answer.innerHTML='<strong>'+a+' — zone '+z+'</strong><br>Le calendrier intégré 2026–2027 est terminé. Consultez la source officielle pour l’année suivante.';
  }
