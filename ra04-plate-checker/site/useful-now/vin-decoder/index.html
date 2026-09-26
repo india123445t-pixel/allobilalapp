@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<title>Free VIN Decoder — Official NHTSA Vehicle Data</title>
+<meta name="description" content="Decode a VIN using the official U.S. NHTSA vPIC API. See make, model, model year, body class, engine, fuel, drive type and manufacturing plant. No sign-up.">
+<link rel="canonical" href="https://india123445t-pixel.github.io/allobilalapp/ra04-plate-checker/site/useful-now/vin-decoder/">
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f5f7fb;color:#17202a}*{box-sizing:border-box}body{margin:0}.wrap{max-width:980px;margin:auto;padding:18px}.hero,.card{background:#fff;border:1px solid #e2e7ef;border-radius:20px;padding:22px;margin:16px 0;box-shadow:0 5px 18px rgba(0,0,0,.04)}h1{font-size:2rem;margin:.3em 0}.lead{line-height:1.7;color:#515d6b}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#eaf1ff;font-size:.82rem;font-weight:750}.search{display:grid;grid-template-columns:1fr auto;gap:10px;margin:16px 0}input,button{font:inherit;border:1px solid #cfd6e0;border-radius:12px;padding:12px 14px}button{background:#17202a;color:#fff;font-weight:800;cursor:pointer}.error{color:#8d2525}.result{display:none}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.field{border:1px solid #e4e8ef;border-radius:14px;padding:14px}.field span{display:block;color:#65707e;font-size:.84rem}.field b{display:block;font-size:1.05rem;margin-top:5px;word-break:break-word}.muted{font-size:.92rem;color:#616c7a;line-height:1.6}.source a{color:#1357a5}@media(max-width:600px){.search{grid-template-columns:1fr}.wrap{padding:12px}h1{font-size:1.55rem}}
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Free VIN Decoder — NHTSA data","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","inLanguage":"en","description":"VIN decoder using the official NHTSA vPIC API."}</script>
+</head>
+<body><main class="wrap">
+<section class="hero">
+<span class="pill">Official NHTSA vPIC API</span>
+<h1>Free VIN Decoder</h1>
+<p class="lead">Enter a vehicle identification number to decode manufacturer-reported vehicle specifications through the U.S. National Highway Traffic Safety Administration.</p>
+<div class="search"><input id="vin" maxlength="17" autocomplete="off" spellcheck="false" placeholder="Example: 1HGCM82633A004352" aria-label="VIN"><button id="decode">Decode VIN</button></div>
+<div id="message" class="muted">17-character VINs are standard for modern vehicles. NHTSA also supports some partial VIN decoding.</div>
+</section>
+
+<section id="result" class="card result">
+<h2 id="vehicleTitle">Vehicle details</h2>
+<div class="grid">
+<div class="field"><span>Make</span><b id="Make">—</b></div>
+<div class="field"><span>Model</span><b id="Model">—</b></div>
+<div class="field"><span>Model year</span><b id="ModelYear">—</b></div>
+<div class="field"><span>Vehicle type</span><b id="VehicleType">—</b></div>
+<div class="field"><span>Body class</span><b id="BodyClass">—</b></div>
+<div class="field"><span>Drive type</span><b id="DriveType">—</b></div>
+<div class="field"><span>Fuel</span><b id="FuelTypePrimary">—</b></div>
+<div class="field"><span>Engine cylinders</span><b id="EngineCylinders">—</b></div>
+<div class="field"><span>Engine displacement (L)</span><b id="DisplacementL">—</b></div>
+<div class="field"><span>Plant city</span><b id="PlantCity">—</b></div>
+<div class="field"><span>Plant country</span><b id="PlantCountry">—</b></div>
+<div class="field"><span>Manufacturer</span><b id="Manufacturer">—</b></div>
+</div>
+<p id="errors" class="muted"></p>
+</section>
+
+<section class="card source">
+<h2>What this tool does — and does not do</h2>
+<p>It decodes technical information reported by vehicle manufacturers to NHTSA. It does <strong>not</strong> provide ownership history, accident history, mileage history, liens or a guarantee about the vehicle’s condition.</p>
+<p>Your VIN is sent directly from your browser to the official NHTSA vPIC API for decoding. This page does not have its own backend that stores the VIN.</p>
+<p><a href="https://www.nhtsa.gov/vin-decoder" target="_blank" rel="noopener">NHTSA VIN Decoder</a><br>
+<a href="https://vpic.nhtsa.dot.gov/api/" target="_blank" rel="noopener">NHTSA vPIC API documentation</a></p>
+</section>
+<p><a href="../">← All Useful Now tools</a></p>
+</main>
+<script>
+const clean=s=>s.toUpperCase().replace(/\s+/g,'').replace(/[^A-HJ-NPR-Z0-9*]/g,'');
+const fields=["Make","Model","ModelYear","VehicleType","BodyClass","DriveType","FuelTypePrimary","EngineCylinders","DisplacementL","PlantCity","PlantCountry","Manufacturer"];
+async function decode(){
+ const vin=clean(document.getElementById('vin').value);document.getElementById('vin').value=vin;
+ const msg=document.getElementById('message'), box=document.getElementById('result');box.style.display='none';
+ if(vin.length<8){msg.innerHTML='<span class="error">Enter at least 8 VIN characters.</span>';return}
+ msg.textContent='Decoding through NHTSA…';
+ try{
+   const url='https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended/'+encodeURIComponent(vin)+'?format=json';
+   const r=await fetch(url,{headers:{'Accept':'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);
+   const j=await r.json(), x=j.Results&&j.Results[0];if(!x)throw new Error('No result');
+   fields.forEach(k=>document.getElementById(k).textContent=x[k]||'—');
+   const title=[x.ModelYear,x.Make,x.Model].filter(Boolean).join(' ');
+   document.getElementById('vehicleTitle').textContent=title||'Decoded vehicle';
+   document.getElementById('errors').textContent=x.ErrorText&&x.ErrorCode!=='0'?'NHTSA note: '+x.ErrorText:'Decoded by NHTSA vPIC.';
+   box.style.display='block';msg.textContent='Official NHTSA response received.';
+   const p=new URLSearchParams(location.search);p.set('vin',vin);history.replaceState(null,'','?'+p.toString());
+ }catch(e){msg.innerHTML='<span class="error">The NHTSA service could not be reached from this browser right now. Try again later or use the official NHTSA decoder linked below.</span>'}
+}
+document.getElementById('decode').onclick=decode;
+document.getElementById('vin').addEventListener('keydown',e=>{if(e.key==='Enter')decode()});
+const q=new URLSearchParams(location.search).get('vin');if(q){document.getElementById('vin').value=q;decode()}
+</script>
+</body></html>
