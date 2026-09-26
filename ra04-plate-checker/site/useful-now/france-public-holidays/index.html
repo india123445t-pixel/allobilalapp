@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<title>Jours fériés France — prochain jour férié & calcul jours ouvrés</title>
+<meta name="description" content="Vérifiez le prochain jour férié en France et calculez les jours ouvrés entre deux dates avec les données officielles de l’API gouvernementale. Métropole, Alsace-Moselle et outre-mer.">
+<link rel="canonical" href="https://india123445t-pixel.github.io/allobilalapp/ra04-plate-checker/site/useful-now/france-public-holidays/">
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f5f7fb;color:#17202a}*{box-sizing:border-box}body{margin:0}.wrap{max-width:980px;margin:auto;padding:18px}.hero,.card{background:#fff;border:1px solid #e2e7ef;border-radius:20px;padding:22px;margin:16px 0;box-shadow:0 5px 18px rgba(0,0,0,.04)}h1{font-size:2rem;margin:.3em 0}h2{font-size:1.28rem}.lead{line-height:1.7;color:#505b69}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#eaf1ff;font-size:.82rem;font-weight:750}.controls{display:grid;grid-template-columns:1fr auto;gap:10px;margin:14px 0}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}select,input,button{font:inherit;border:1px solid #cfd6e0;border-radius:12px;padding:12px;background:#fff}button{background:#17202a;color:#fff;font-weight:800;cursor:pointer}.answer{border:1px solid #dce3ed;border-radius:16px;padding:18px;background:#f8faff}.answer strong{font-size:1.22rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.metric{border:1px solid #e2e7ef;border-radius:14px;padding:14px}.metric b{display:block;font-size:1.5rem}.muted{font-size:.92rem;color:#606b79;line-height:1.65}.source a{color:#1358a4}.error{color:#8d2525}.status{font-size:.84rem;color:#65707d}@media(max-width:600px){.controls,.two{grid-template-columns:1fr}.wrap{padding:12px}h1{font-size:1.55rem}}
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Jours fériés France & calcul jours ouvrés","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","inLanguage":"fr","description":"Outil basé sur l’API officielle jours fériés de l’État français."}</script>
+</head>
+<body><main class="wrap">
+<section class="hero">
+<span class="pill">API officielle · République française</span>
+<h1>Quel est le prochain jour férié ?</h1>
+<p class="lead">Choisissez votre territoire. L’outil interroge l’API officielle de l’État pour savoir si aujourd’hui est férié et afficher le prochain jour férié.</p>
+<div class="controls">
+<select id="zone" aria-label="Territoire">
+<option value="metropole">France métropolitaine</option>
+<option value="alsace-moselle">Alsace-Moselle</option>
+<option value="guadeloupe">Guadeloupe</option><option value="guyane">Guyane</option><option value="la-reunion">La Réunion</option><option value="martinique">Martinique</option><option value="mayotte">Mayotte</option><option value="nouvelle-caledonie">Nouvelle-Calédonie</option><option value="polynesie-francaise">Polynésie française</option><option value="saint-barthelemy">Saint-Barthélemy</option><option value="saint-martin">Saint-Martin</option><option value="saint-pierre-et-miquelon">Saint-Pierre-et-Miquelon</option><option value="wallis-et-futuna">Wallis-et-Futuna</option>
+</select><button id="check">Vérifier</button>
+</div>
+<div id="answer" class="answer">Chargement des données officielles…</div>
+<p id="status" class="status"></p>
+</section>
+
+<section class="card">
+<h2>Calculer les jours ouvrés</h2>
+<p class="muted">Le calcul compte du lundi au vendredi et retire les jours fériés officiels du territoire choisi. Pour une échéance juridique ou contractuelle, vérifiez toujours la définition applicable de « jour ouvré ».</p>
+<div class="two"><label>Date de début<br><input id="start" type="date"></label><label>Date de fin<br><input id="end" type="date"></label></div>
+<div class="controls"><select id="calcZone">
+<option value="metropole">France métropolitaine</option><option value="alsace-moselle">Alsace-Moselle</option><option value="guadeloupe">Guadeloupe</option><option value="guyane">Guyane</option><option value="la-reunion">La Réunion</option><option value="martinique">Martinique</option><option value="mayotte">Mayotte</option><option value="nouvelle-caledonie">Nouvelle-Calédonie</option><option value="polynesie-francaise">Polynésie française</option><option value="saint-barthelemy">Saint-Barthélemy</option><option value="saint-martin">Saint-Martin</option><option value="saint-pierre-et-miquelon">Saint-Pierre-et-Miquelon</option><option value="wallis-et-futuna">Wallis-et-Futuna</option>
+</select><button id="calc">Calculer</button></div>
+<div class="grid">
+<div class="metric"><b id="work">—</b><span>jours ouvrés</span></div>
+<div class="metric"><b id="cal">—</b><span>jours calendaires</span></div>
+<div class="metric"><b id="weekend">—</b><span>jours de week-end</span></div>
+<div class="metric"><b id="hol">—</b><span>jours fériés retirés</span></div>
+</div>
+<div id="used" class="muted"></div>
+</section>
+
+<section class="card source">
+<h2>Source officielle</h2>
+<p>Les données viennent de <strong>calendrier.api.gouv.fr</strong>, l’API publique des jours fériés de l’État français. Le service couvre la métropole, l’Alsace-Moselle et plusieurs territoires d’outre-mer.</p>
+<p><a href="https://calendrier.api.gouv.fr/" target="_blank" rel="noopener">API jours fériés — calendrier.api.gouv.fr</a></p>
+<p class="muted">Cette page ne collecte aucune donnée personnelle. Si l’API officielle est indisponible, l’outil l’indique au lieu d’inventer une réponse. Une copie de secours vérifiée le 26 septembre 2026 est intégrée uniquement pour la métropole et l’Alsace-Moselle en 2026–2027.</p>
+</section>
+<p><a href="../">← Tous les outils Useful Now</a></p>
+</main>
+<script>
+const FALLBACK={
+metropole:{
+2026:{"2026-01-01":"1er janvier","2026-04-06":"Lundi de Pâques","2026-05-01":"1er mai","2026-05-08":"8 mai","2026-05-14":"Ascension","2026-05-25":"Lundi de Pentecôte","2026-07-14":"14 juillet","2026-08-15":"Assomption","2026-11-01":"Toussaint","2026-11-11":"11 novembre","2026-12-25":"Jour de Noël"},
+2027:{"2027-01-01":"1er janvier","2027-03-29":"Lundi de Pâques","2027-05-01":"1er mai","2027-05-06":"Ascension","2027-05-08":"8 mai","2027-05-17":"Lundi de Pentecôte","2027-07-14":"14 juillet","2027-08-15":"Assomption","2027-11-01":"Toussaint","2027-11-11":"11 novembre","2027-12-25":"Jour de Noël"}},
+"alsace-moselle":{
+2026:{"2026-01-01":"1er janvier","2026-04-03":"Vendredi saint","2026-04-06":"Lundi de Pâques","2026-05-01":"1er mai","2026-05-08":"8 mai","2026-05-14":"Ascension","2026-05-25":"Lundi de Pentecôte","2026-07-14":"14 juillet","2026-08-15":"Assomption","2026-11-01":"Toussaint","2026-11-11":"11 novembre","2026-12-25":"Jour de Noël","2026-12-26":"2ème jour de Noël"},
+2027:{"2027-01-01":"1er janvier","2027-03-26":"Vendredi saint","2027-03-29":"Lundi de Pâques","2027-05-01":"1er mai","2027-05-06":"Ascension","2027-05-08":"8 mai","2027-05-17":"Lundi de Pentecôte","2027-07-14":"14 juillet","2027-08-15":"Assomption","2027-11-01":"Toussaint","2027-11-11":"11 novembre","2027-12-25":"Jour de Noël","2027-12-26":"2ème jour de Noël"}}};
+const cache={};
+const dayNum=s=>{const [y,m,d]=s.split('-').map(Number);return Date.UTC(y,m-1,d)/86400000};
+const dateFromKey=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(Date.UTC(y,m-1,d))};
+const keyFromUTC=d=>d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+const todayParis=()=>{const p=Object.fromEntries(new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
+const fmt=s=>new Intl.DateTimeFormat('fr-FR',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(dateFromKey(s));
+const addDays=(s,n)=>{const d=dateFromKey(s);d.setUTCDate(d.getUTCDate()+n);return keyFromUTC(d)};
+async function load(zone,year){
+ const key=zone+'|'+year;if(cache[key])return cache[key];
+ try{
+  const r=await fetch('https://calendrier.api.gouv.fr/jours-feries/'+zone+'/'+year+'.json',{headers:{Accept:'application/json'}});
+  if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();cache[key]={data:j,live:true};return cache[key];
+ }catch(e){
+  const fb=FALLBACK[zone]&&FALLBACK[zone][year];if(fb){cache[key]={data:fb,live:false};return cache[key]}
+  throw e;
+ }
+}
+async function check(){
+ const zone=document.getElementById('zone').value, today=todayParis(), y=+today.slice(0,4), box=document.getElementById('answer'), st=document.getElementById('status');
+ box.textContent='Chargement…';st.textContent='';
+ try{
+   const current=await load(zone,y);let all={...current.data};
+   if(!Object.keys(all).some(k=>k>today)){try{const n=await load(zone,y+1);all={...all,...n.data}}catch(e){}}
+   const keys=Object.keys(all).sort(), nowName=all[today], next=keys.find(k=>k>today);
+   if(nowName)box.innerHTML='<strong>Oui — aujourd’hui est férié : '+nowName+'.</strong><br>'+fmt(today)+'.';
+   else if(next)box.innerHTML='<strong>Non — aujourd’hui n’est pas un jour férié.</strong><br>Prochain : '+all[next]+' le '+fmt(next)+', dans '+(dayNum(next)-dayNum(today))+' jour(s).';
+   else box.innerHTML='<strong>Aucun prochain jour férié disponible dans les données chargées.</strong>';
+   st.textContent=current.live?'Données chargées en direct depuis l’API officielle.':'API indisponible : copie officielle de secours vérifiée le 26 septembre 2026.';
+ }catch(e){box.innerHTML='<span class="error"><strong>Source officielle indisponible.</strong> Impossible de donner une réponse fiable pour ce territoire maintenant.</span>';st.textContent='Aucune estimation non officielle n’est utilisée.'}
+}
+async function calculate(){
+ let a=document.getElementById('start').value,b=document.getElementById('end').value;const zone=document.getElementById('calcZone').value;
+ if(!a||!b)return;if(a>b)[a,b]=[b,a];
+ const y1=+a.slice(0,4),y2=+b.slice(0,4);if(y2-y1>3){document.getElementById('used').innerHTML='<span class="error">Choisissez une période de 4 ans maximum.</span>';return}
+ try{
+  let holidays={};for(let y=y1;y<=y2;y++){const x=await load(zone,y);holidays={...holidays,...x.data}}
+  let cal=0,we=0,hol=0,work=0,used=[];
+  for(let n=dayNum(a);n<=dayNum(b);n++){cal++;const d=new Date(n*86400000),key=keyFromUTC(d),dow=d.getUTCDay();if(dow===0||dow===6){we++;continue}if(holidays[key]){hol++;used.push(holidays[key]+' — '+fmt(key));continue}work++}
+  document.getElementById('work').textContent=work;document.getElementById('cal').textContent=cal;document.getElementById('weekend').textContent=we;document.getElementById('hol').textContent=hol;
+  document.getElementById('used').innerHTML=used.length?'<p><strong>Jours fériés retirés :</strong><br>'+used.join('<br>')+'</p>':'<p>Aucun jour férié en semaine dans cette période.</p>';
+ }catch(e){document.getElementById('used').innerHTML='<span class="error">La source officielle est indisponible et aucune copie de secours n’existe pour ce territoire ou cette année.</span>'}
+}
+document.getElementById('check').onclick=check;document.getElementById('zone').onchange=check;document.getElementById('calc').onclick=calculate;
+const t=todayParis();document.getElementById('start').value=t;document.getElementById('end').value=addDays(t,30);check();
+</script>
+</body></html>
