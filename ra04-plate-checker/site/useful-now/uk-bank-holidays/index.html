@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<title>UK Bank Holiday Checker & Working Days Calculator 2026–2028</title>
+<meta name="description" content="Check if today is a UK bank holiday, find the next official holiday, and count working days between two dates for England & Wales, Scotland or Northern Ireland using GOV.UK data.">
+<link rel="canonical" href="https://india123445t-pixel.github.io/allobilalapp/ra04-plate-checker/site/useful-now/uk-bank-holidays/">
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f5f7fb;color:#17202a}*{box-sizing:border-box}body{margin:0}.wrap{max-width:980px;margin:auto;padding:18px}.hero,.card{background:#fff;border:1px solid #e2e7ef;border-radius:20px;padding:22px;margin:16px 0;box-shadow:0 5px 18px rgba(0,0,0,.04)}h1{font-size:2rem;margin:.3em 0}h2{font-size:1.28rem}.lead{font-size:1.05rem;line-height:1.7;color:#505b69}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#eaf1ff;font-size:.82rem;font-weight:750}.controls{display:grid;grid-template-columns:1fr auto;gap:10px;margin:14px 0}select,input,button{font:inherit;border:1px solid #cfd6e0;border-radius:12px;padding:12px;background:#fff}button{background:#17202a;color:#fff;font-weight:800;cursor:pointer}.answer{border:1px solid #dce3ed;border-radius:16px;padding:18px;background:#f8faff}.answer strong{font-size:1.25rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.metric{border:1px solid #e2e7ef;border-radius:14px;padding:14px}.metric b{font-size:1.5rem;display:block}.muted{color:#606b79;font-size:.92rem;line-height:1.6}.source a{color:#1358a4}.status{font-size:.85rem;color:#586473}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:600px){.controls,.two{grid-template-columns:1fr}.wrap{padding:12px}h1{font-size:1.55rem}}
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"UK Bank Holiday Checker & Working Days Calculator","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","inLanguage":"en","description":"Checks official UK bank holidays and calculates working days for England and Wales, Scotland and Northern Ireland."}</script>
+</head>
+<body><main class="wrap">
+<section class="hero">
+<span class="pill">Official GOV.UK data</span>
+<h1>Is today a bank holiday?</h1>
+<p class="lead">Choose your UK nation to see today’s status, the next bank holiday and how many days remain.</p>
+<div class="controls"><select id="region">
+<option value="england-and-wales">England & Wales</option>
+<option value="scotland">Scotland</option>
+<option value="northern-ireland">Northern Ireland</option>
+</select><button id="checkToday">Check today</button></div>
+<div id="todayAnswer" class="answer" aria-live="polite">Loading official bank holiday data…</div>
+<p id="feedStatus" class="status"></p>
+</section>
+
+<section class="card">
+<h2>Working days calculator</h2>
+<p class="muted">Counts Monday–Friday and removes official bank holidays for the selected nation. Use this for planning; a legal or contractual deadline may define “working day” differently.</p>
+<div class="two"><label>Start date<br><input id="start" type="date"></label><label>End date<br><input id="end" type="date"></label></div>
+<div class="controls"><select id="calcRegion">
+<option value="england-and-wales">England & Wales</option><option value="scotland">Scotland</option><option value="northern-ireland">Northern Ireland</option>
+</select><button id="calc">Count working days</button></div>
+<div class="grid">
+<div class="metric"><b id="working">—</b><span>working days</span></div>
+<div class="metric"><b id="calendar">—</b><span>calendar days</span></div>
+<div class="metric"><b id="weekend">—</b><span>weekend days</span></div>
+<div class="metric"><b id="holidays">—</b><span>bank holidays excluded</span></div>
+</div>
+<div id="holidayList" class="muted"></div>
+</section>
+
+<section class="card source">
+<h2>Source</h2>
+<p>Data source: the official GOV.UK Bank Holidays API. The government feed covers England and Wales, Scotland and Northern Ireland and includes substitute days.</p>
+<p><a href="https://www.gov.uk/bank-holidays" target="_blank" rel="noopener">UK bank holidays — GOV.UK</a><br>
+<a href="https://www.gov.uk/bank-holidays.json" target="_blank" rel="noopener">Official JSON feed</a></p>
+<p class="muted">GOV.UK notes that an employer does not automatically have to give paid leave on bank or public holidays; entitlement depends on the employment contract. This tool does not collect personal data.</p>
+</section>
+<p><a href="../">← All Useful Now tools</a></p>
+</main>
+<script>
+const SNAP={
+"england-and-wales":[
+["New Year’s Day","2026-01-01"],["Good Friday","2026-04-03"],["Easter Monday","2026-04-06"],["Early May bank holiday","2026-05-04"],["Spring bank holiday","2026-05-25"],["Summer bank holiday","2026-08-31"],["Christmas Day","2026-12-25"],["Boxing Day","2026-12-28"],
+["New Year’s Day","2027-01-01"],["Good Friday","2027-03-26"],["Easter Monday","2027-03-29"],["Early May bank holiday","2027-05-03"],["Spring bank holiday","2027-05-31"],["Summer bank holiday","2027-08-30"],["Christmas Day","2027-12-27"],["Boxing Day","2027-12-28"],
+["New Year’s Day","2028-01-03"],["Good Friday","2028-04-14"],["Easter Monday","2028-04-17"],["Early May bank holiday","2028-05-01"],["Spring bank holiday","2028-05-29"],["Summer bank holiday","2028-08-28"],["Christmas Day","2028-12-25"],["Boxing Day","2028-12-26"]],
+"scotland":[
+["New Year’s Day","2026-01-01"],["2nd January","2026-01-02"],["Good Friday","2026-04-03"],["Early May bank holiday","2026-05-04"],["Spring bank holiday","2026-05-25"],["World Cup bank holiday","2026-06-15"],["Summer bank holiday","2026-08-03"],["St Andrew’s Day","2026-11-30"],["Christmas Day","2026-12-25"],["Boxing Day","2026-12-28"],
+["New Year’s Day","2027-01-01"],["2nd January","2027-01-04"],["Good Friday","2027-03-26"],["Early May bank holiday","2027-05-03"],["Spring bank holiday","2027-05-31"],["Summer bank holiday","2027-08-02"],["St Andrew’s Day","2027-11-30"],["Christmas Day","2027-12-27"],["Boxing Day","2027-12-28"],
+["New Year’s Day","2028-01-03"],["2nd January","2028-01-04"],["Good Friday","2028-04-14"],["Early May bank holiday","2028-05-01"],["Spring bank holiday","2028-05-29"],["Summer bank holiday","2028-08-07"],["St Andrew’s Day","2028-11-30"],["Christmas Day","2028-12-25"],["Boxing Day","2028-12-26"]],
+"northern-ireland":[
+["New Year’s Day","2026-01-01"],["St Patrick’s Day","2026-03-17"],["Good Friday","2026-04-03"],["Easter Monday","2026-04-06"],["Early May bank holiday","2026-05-04"],["Spring bank holiday","2026-05-25"],["Battle of the Boyne (Orangemen’s Day)","2026-07-13"],["Summer bank holiday","2026-08-31"],["Christmas Day","2026-12-25"],["Boxing Day","2026-12-28"],
+["New Year’s Day","2027-01-01"],["St Patrick’s Day","2027-03-17"],["Good Friday","2027-03-26"],["Easter Monday","2027-03-29"],["Early May bank holiday","2027-05-03"],["Spring bank holiday","2027-05-31"],["Battle of the Boyne (Orangemen’s Day)","2027-07-12"],["Summer bank holiday","2027-08-30"],["Christmas Day","2027-12-27"],["Boxing Day","2027-12-28"],
+["New Year’s Day","2028-01-03"],["St Patrick’s Day","2028-03-17"],["Good Friday","2028-04-14"],["Easter Monday","2028-04-17"],["Early May bank holiday","2028-05-01"],["Spring bank holiday","2028-05-29"],["Battle of the Boyne (Orangemen’s Day)","2028-07-12"],["Summer bank holiday","2028-08-28"],["Christmas Day","2028-12-25"],["Boxing Day","2028-12-26"]]};
+let data=JSON.parse(JSON.stringify(SNAP));
+const D=s=>new Date(s+"T00:00:00"), iso=d=>d.toISOString().slice(0,10);
+const fmt=d=>new Intl.DateTimeFormat('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d);
+function regionName(k){return k==='england-and-wales'?'England & Wales':k==='scotland'?'Scotland':'Northern Ireland'}
+function renderToday(){
+ const k=document.getElementById('region').value, now=new Date();now.setHours(0,0,0,0);const s=iso(now), arr=data[k]||[];
+ const cur=arr.find(x=>x[1]===s), next=arr.find(x=>D(x[1])>now), box=document.getElementById('todayAnswer');
+ if(cur){box.innerHTML='<strong>Yes — today is '+cur[0]+'.</strong><br>'+regionName(k)+' · '+fmt(now);}
+ else if(next){const n=D(next[1]), days=Math.ceil((n-now)/86400000);box.innerHTML='<strong>No — today is not a bank holiday in '+regionName(k)+'.</strong><br>Next: '+next[0]+' on '+fmt(n)+' ('+days+' day'+(days===1?'':'s')+' away).';}
+ else box.innerHTML='<strong>No future date is available in the current feed snapshot.</strong>';
+}
+function calculate(){
+ const a=document.getElementById('start').value,b=document.getElementById('end').value,k=document.getElementById('calcRegion').value;
+ if(!a||!b)return;let s=D(a),e=D(b);if(s>e)[s,e]=[e,s];
+ const set=new Map((data[k]||[]).map(x=>[x[1],x[0]]));let cal=0,we=0,bh=0,work=0,used=[];
+ for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){cal++;const key=iso(d),day=d.getDay();if(day===0||day===6){we++;continue}if(set.has(key)){bh++;used.push(set.get(key)+' — '+fmt(new Date(d)));continue}work++}
+ document.getElementById('working').textContent=work;document.getElementById('calendar').textContent=cal;document.getElementById('weekend').textContent=we;document.getElementById('holidays').textContent=bh;document.getElementById('holidayList').innerHTML=used.length?'<p><strong>Excluded bank holidays:</strong><br>'+used.join('<br>')+'</p>':'<p>No weekday bank holidays fall inside this range.</p>';
+}
+document.getElementById('checkToday').onclick=renderToday;document.getElementById('region').onchange=renderToday;document.getElementById('calc').onclick=calculate;
+const n=new Date();document.getElementById('start').value=iso(n);const e=new Date(n);e.setDate(e.getDate()+30);document.getElementById('end').value=iso(e);
+fetch('https://www.gov.uk/bank-holidays.json').then(r=>r.ok?r.json():Promise.reject()).then(j=>{
+ for(const k of Object.keys(SNAP)){if(j[k]&&j[k].events)data[k]=j[k].events.map(x=>[x.title,x.date])}
+ document.getElementById('feedStatus').textContent='Live GOV.UK feed loaded.';renderToday();
+}).catch(()=>{document.getElementById('feedStatus').textContent='Using the official GOV.UK snapshot verified 26 September 2026.';renderToday();});
+renderToday();
+</script>
+</body></html>
