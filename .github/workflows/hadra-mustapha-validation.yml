@@ -1,4 +1,4 @@
-name: Mustapha single identity-only Darija gate
+name: Mustapha preserved Darija timbre conversion gate
 on:
   push:
     branches: [temp/mustapha-hadra-validation]
@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -18,86 +19,66 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install isolated expressive CPU runtime
+          python-version: "3.10"
+      - name: Prepare existing preserved source without regeneration
+        env:
+          ARTIFACT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p voice_validation
+          python - <<'PY'
+          import os,urllib.request,zipfile,io,hashlib,json
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args,**kwargs):return None
+          req=urllib.request.Request("https://api.github.com/repos/india123445t-pixel/allobilalapp/actions/artifacts/11119905205/zip",headers={"Authorization":"Bearer "+os.environ["ARTIFACT_TOKEN"],"Accept":"application/vnd.github+json"})
+          try:
+              urllib.request.build_opener(NoRedirect).open(req)
+              raise RuntimeError("Expected signed artifact redirect")
+          except urllib.error.HTTPError as e:
+              assert e.code==302,e.code
+              url=e.headers["Location"]
+          raw=urllib.request.urlopen(url).read()
+          assert hashlib.sha256(raw).hexdigest()=="e67743a0a94e5d5ba6b21f7a4cd63d582d90448ad1ad29630d4d473244ff30d3"
+          z=zipfile.ZipFile(io.BytesIO(raw))
+          open("/tmp/mustapha_source.wav","wb").write(z.read("mustapha_lahgtna_lively.wav"))
+          urllib.request.urlretrieve("https://resource2.heygen.ai/audio/7fa5e8f14fd9486c98bab83932f35bca/original.wav","/tmp/mustapha_original.wav")
+          json.dump({"source_artifact":11119905205,"source_sha256":hashlib.sha256(z.read("mustapha_lahgtna_lively.wav")).hexdigest(),"source_regenerated":False,"code_commit":"51383efd921027683c89e5348211d93ff12ac2a8","convert_style":False,"accepted_by_user":False},open("voice_validation/validation.json","w"),indent=2)
+          PY
+      - name: Install bounded isolated CPU conversion runtime
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y ffmpeg
-          pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
-          pip install resampy==0.4.3 librosa==0.10.2.post1 s3tokenizer transformers==4.46.3 diffusers==0.29.0 omegaconf==2.3.0 resemble-perth==1.0.1 silero-vad==5.1.2 conformer==0.3.2 safetensors numpy==1.26.4 huggingface_hub soundfile
-          git clone https://github.com/Oddadmix/lahgtna-chatterbox.git /tmp/lahgtna
-          git -C /tmp/lahgtna checkout 433cb74200b55457bffa8ee6965a02ecab546a1c
-      - name: Test actual expressive conditioning with existing own voice
-        run: |
-          cat > /tmp/expressive_gate.py <<'PY'
-          import sys, json, time, urllib.request, subprocess, gc, random
+          pip install torch==2.4.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install numpy==1.26.4 scipy==1.13.1 librosa==0.10.2 transformers==4.46.3 huggingface-hub==0.28.1 munch==4.0.0 einops==0.8.0 hydra-core==1.3.2 pyyaml soundfile==0.12.1 pydub==0.25.1 accelerate safetensors
+          git clone https://github.com/Plachtaa/seed-vc.git /tmp/seed-vc
+          git -C /tmp/seed-vc checkout 51383efd921027683c89e5348211d93ff12ac2a8
+          python - <<'PY'
           from pathlib import Path
-          import numpy as np, torch, soundfile as sf
-          from huggingface_hub import hf_hub_download, model_info
-          torch.set_num_threads(2)
-          OUT=Path("voice_validation"); OUT.mkdir(exist_ok=True)
-          urllib.request.urlretrieve("https://resource2.heygen.ai/audio/7fa5e8f14fd9486c98bab83932f35bca/original.wav","/tmp/mustapha_raw.wav")
-          subprocess.run(["ffmpeg","-y","-ss","1.40","-i","/tmp/mustapha_raw.wav","-ac","1","-ar","24000","-t","8","/tmp/mustapha_ref.wav"],check=True)
-          audio,sr=sf.read("/tmp/mustapha_ref.wav")
-          assert len(audio)==8*sr and np.sqrt(np.mean(audio**2))>0.002, "Invalid reference signal"
-          audio=audio/max(float(np.max(np.abs(audio))),0.001)*0.85
-          sf.write("/tmp/mustapha_ref.wav",audio,sr)
-          # Author code loads CPU checkpoints without map_location; make CPU portability explicit.
-          src=Path("/tmp/lahgtna/src/chatterbox/mtl_tts.py")
-          code=src.read_text().replace('torch.load(ckpt_dir / "ve.pt", weights_only=True)', 'torch.load(ckpt_dir / "ve.pt", weights_only=True, map_location=device)')
-          code=code.replace('torch.load(ckpt_dir / "s3gen.pt", weights_only=True)', 'torch.load(ckpt_dir / "s3gen.pt", weights_only=True, map_location=device)')
-          code=code.replace("max_new_tokens=1000","max_new_tokens=300")
-          compile(code,str(src),"exec")
-          src.write_text(code)
-          sys.path.insert(0,"/tmp/lahgtna")
-          from src.chatterbox.mtl_tts import ChatterboxMultilingualTTS, ARABIC_DIALECTS_MAPPING
-          assert ARABIC_DIALECTS_MAPPING["mo"]=="pl", "Moroccan routing changed"
-          root=Path("/tmp/checkpoints"); root.mkdir()
-          versions={}
-          for repo,files in [
-              ("ResembleAI/chatterbox",["ve.pt","s3gen.pt","grapheme_mtl_merged_expanded_v1.json","Cangjie5_TC.json"]),
-              ("oddadmix/lahgtna-chatterbox-v1",["t3_mtl23ls_v2.safetensors"])]:
-              revision={"ResembleAI/chatterbox":"5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18","oddadmix/lahgtna-chatterbox-v1":"6b37e50d1952f07306dc9ff3f3d4ff4ddaf32541"}[repo]; versions[repo]=revision
-              for name in files:
-                  p=hf_hub_download(repo,name,revision=revision)
-                  (root/name).symlink_to(p)
-          model=ChatterboxMultilingualTTS.from_local(root,"cpu")
-          target="إيوا مصطفى، واجد نبداو؟ اليوم عندنا فكرة زوينة!"
-          import librosa
-          from src.chatterbox.mtl_tts import T3Cond, S3_SR
-          random.seed(20260930);np.random.seed(20260930);torch.manual_seed(20260930)
-          model.prepare_conditionals("/tmp/mustapha_ref.wav",exaggeration=0.85)
-          old=model.conds.t3
-          rng=(random.getstate(),np.random.get_state(),torch.get_rng_state())
-          full,rate=librosa.load("/tmp/mustapha_raw.wav",sr=S3_SR)
-          assert 30<len(full)/rate<60 and np.isfinite(full).all()
-          full=full/max(float(np.max(np.abs(full))),0.001)*0.85
-          with torch.inference_mode():
-              emb=torch.from_numpy(model.ve.embeds_from_wavs([full],sample_rate=S3_SR)).mean(axis=0,keepdim=True).to(model.device)
-              assert emb.shape==old.speaker_emb.shape and torch.isfinite(emb).all()
-              cosine=float(torch.nn.functional.cosine_similarity(emb,old.speaker_emb,dim=1).mean().item())
-              model.conds.t3=T3Cond(speaker_emb=emb,cond_prompt_speech_tokens=old.cond_prompt_speech_tokens,emotion_adv=old.emotion_adv).to(device=model.device)
-          random.setstate(rng[0]);np.random.set_state(rng[1]);torch.set_rng_state(rng[2])
-          assert model.conds.t3.cond_prompt_speech_tokens is old.cond_prompt_speech_tokens
-          metadata=dict(model="oddadmix/lahgtna-chatterbox-v1",versions=versions,code_commit="433cb74200b55457bffa8ee6965a02ecab546a1c",method="speaker_emb replaced from full existing reference ONLY; original8s prompt/vocoder conditions retained; RNG preserved",reference_seconds=len(full)/rate,embedding_cosine_diagnostic_only=cosine,text=target,exaggeration=0.85,cfg_weight=0.35,temperature=0.70,repetition_penalty=2.0,seed=20260930,accepted_by_user=False)
-          (OUT/"validation.json").write_text(json.dumps(metadata,ensure_ascii=False,indent=2))
-          started=time.time()
-          wav=model.generate(target,language_id="mo",exaggeration=0.85,cfg_weight=0.35,temperature=0.70,repetition_penalty=2.0)
-          samples=wav.squeeze().numpy();seconds=len(samples)/model.sr
-          assert 1.5<seconds<15 and np.isfinite(samples).all() and np.sqrt(np.mean(samples**2))>0.0001
-          file="mustapha_identity_only.wav"
-          sf.write(OUT/file,samples,model.sr,subtype="PCM_16")
-          metadata["output"]=dict(file=file,seconds=seconds,rate=model.sr,inference_seconds=time.time()-started)
-          (OUT/"validation.json").write_text(json.dumps(metadata,ensure_ascii=False,indent=2))
-          print("SAMPLE_READY",json.dumps(metadata,ensure_ascii=False),flush=True)
-          del model;gc.collect()
+          p=Path("/tmp/seed-vc/inference_v2.py");s=p.read_text()
+          assert s.count("dtype = torch.float16")==1
+          s=s.replace("dtype = torch.float16","dtype = torch.float16 if device.type == 'cuda' else torch.float32")
+          compile(s,str(p),"exec");p.write_text(s)
           PY
-          python -u /tmp/expressive_gate.py
-      - name: Preserve validation evidence
+          ffmpeg -y -ss 1.4 -i /tmp/mustapha_original.wav -t 8 -ar 22050 -ac 1 /tmp/mustapha_target.wav
+      - name: One timbre-only conversion preserving source speaking style
+        run: |
+          cd /tmp/seed-vc
+          set -o pipefail
+          timeout 600 python -u inference_v2.py --source /tmp/mustapha_source.wav --target /tmp/mustapha_target.wav --output "$GITHUB_WORKSPACE/voice_validation/converted" --diffusion-steps 25 --length-adjust 1.0 --convert-style false --anonymization-only false --intelligibility-cfg-rate 0.7 --similarity-cfg-rate 0.7 2>&1 | tee "$GITHUB_WORKSPACE/voice_validation/conversion.log"
+          python - <<'PY'
+          import os,json,pathlib,soundfile as sf,numpy as np
+          p=pathlib.Path(os.environ["GITHUB_WORKSPACE"])/"voice_validation"
+          files=list((p/"converted").glob("*.wav"));assert len(files)==1,files
+          audio,sr=sf.read(files[0]);seconds=len(audio)/sr
+          assert 2<seconds<12 and np.isfinite(audio).all() and np.sqrt(np.mean(audio**2))>0.0001
+          sf.write(p/"mustapha_timbre_conversion.wav",audio,sr,subtype="PCM_16")
+          v=json.loads((p/"validation.json").read_text());v["output"]={"seconds":seconds,"rate":sr,"rms":float(np.sqrt(np.mean(audio**2))),"peak":float(np.max(np.abs(audio)))}
+          (p/"validation.json").write_text(json.dumps(v,indent=2));print("CONVERSION_READY",v)
+          PY
+      - name: Preserve output and evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mustapha-identity-only-gate
+          name: mustapha-timbre-conversion-gate
           path: voice_validation/
           retention-days: 3
           if-no-files-found: warn
