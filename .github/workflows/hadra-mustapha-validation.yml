@@ -40,11 +40,13 @@ jobs:
           subprocess.run(["ffmpeg","-y","-i","/tmp/mustapha_raw.wav","-ac","1","-ar","24000","-t","8","/tmp/mustapha_ref.wav"],check=True)
           audio,sr=sf.read("/tmp/mustapha_ref.wav")
           assert len(audio)>sr*2, "Reference too short"
+          audio=audio/max(abs(audio).max(),0.001)*0.90
+          sf.write("/tmp/mustapha_ref.wav",audio,sr)
           print("REFERENCE_SECONDS",len(audio)/sr,flush=True)
-          asr=pipeline("automatic-speech-recognition", model="openai/whisper-base", device=-1)
+          asr=pipeline("automatic-speech-recognition", model="openai/whisper-large-v3-turbo", device=-1)
           ref_text=asr("/tmp/mustapha_ref.wav",generate_kwargs={"language":"ar","task":"transcribe"})["text"].strip()
           print("REFERENCE_TRANSCRIPT",ref_text,flush=True)
-          assert len(ref_text)>8, "Reference transcript empty or too short"
+          assert len(ref_text)>24 and len(set(ref_text.split()))>4, "Reference transcript unreliable: inspect recording before synthesis"
           del asr; gc.collect()
           from f5_tts.infer.utils_infer import load_model, load_vocoder
           from f5_tts.model import DiT
@@ -58,7 +60,7 @@ jobs:
           target="واش نخرجو نشربو شي أتاي؟ من بعد نرجعو ونكملو الخدمة بشوية."
           started=time.time()
           with torch.inference_mode():
-              wav,rate,_=infer_process("/tmp/mustapha_ref.wav",ref_text,target,model,vocoder,nfe_step=32,cfg_strength=2.0,sway_sampling_coef=-1.0,speed=0.95,device="cpu")
+              wav,rate,_=infer_process("/tmp/mustapha_ref.wav",ref_text,target,model,vocoder,nfe_step=32,cfg_strength=2.0,sway_sampling_coef=-1.0,speed=0.95,fix_duration=16.0,device="cpu")
           assert len(wav)>rate, "Output too short"
           sf.write(OUT/"mustapha_hadra_new_sentence.wav",wav,rate)
           meta={"model":repo,"reference_transcript_automatic_needs_verification":ref_text,"new_sentence":target,"rate":rate,"seconds":len(wav)/rate,"inference_seconds":time.time()-started,"accepted_by_user":False}
@@ -66,7 +68,7 @@ jobs:
           print(json.dumps(meta,ensure_ascii=False),flush=True)
           del model,vocoder;gc.collect()
           asr=pipeline("automatic-speech-recognition",model="openai/whisper-base",device=-1)
-          meta["output_transcript_advisory_only"]=asr(str(OUT/"mustapha_hadra_new_sentence.wav"),generate_kwargs={"language":"ar","task":"transcribe"})["text"]
+          meta["output_transcript_advisory_only"]=asr(str(OUT/"mustapha_hadra_new_sentence.wav"),return_timestamps=True,generate_kwargs={"language":"ar","task":"transcribe"})["text"]
           (OUT/"validation.json").write_text(json.dumps(meta,ensure_ascii=False,indent=2))
           print("OUTPUT_TRANSCRIPT",meta["output_transcript_advisory_only"],flush=True)
           
