@@ -24,7 +24,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
           python -m pip install --upgrade pip
-          pip install "TTS==0.22.0"
+          pip install "TTS==0.22.0"\n          pip install "transformers==4.38.2" "tokenizers==0.15.2"
 
       - name: Download and normalize Mustapha reference
         run: |
