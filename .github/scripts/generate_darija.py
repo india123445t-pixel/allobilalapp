@@ -1,6 +1,8 @@
 from huggingface_hub import hf_hub_download
 import outetts
 from outetts.models.config import GenerationConfig
+import wave
+import numpy as np
 
 MODEL_REPO = "KandirResearch/DarijaTTS-v0.1-500M"
 MODEL_FILE = "unsloth.Q8_0.gguf"
@@ -24,5 +26,13 @@ gen = GenerationConfig(
 )
 
 audio = interface.generate(config=gen)
-audio.save("darija.wav")
-print("WAV_READY=darija.wav")
+samples = audio.audio.detach().cpu().squeeze().float().clamp(-1, 1).numpy()
+pcm = (samples * 32767.0).astype(np.int16)
+
+with wave.open("darija.wav", "wb") as wf:
+    wf.setnchannels(1)
+    wf.setsampwidth(2)
+    wf.setframerate(audio.sr)
+    wf.writeframes(pcm.tobytes())
+
+print(f"WAV_READY=darija.wav SR={audio.sr} SAMPLES={pcm.size}")
