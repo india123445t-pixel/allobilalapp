@@ -20,19 +20,17 @@ jobs:
       - name: Install runtime
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg unzip
           python -m pip install --upgrade pip
           pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.1.2" "torchaudio==2.1.2"
-          pip install "transformers==4.49.0" accelerate scipy soundfile sentencepiece
+          pip install "numpy==1.23.5" "transformers==4.49.0" accelerate scipy soundfile sentencepiece
           git clone --depth 1 https://github.com/myshell-ai/OpenVoice.git
-          pip install "numpy==1.23.5" "librosa==0.9.1" "inflect==7.0.0" "unidecode==1.3.7" "eng_to_ipa==0.0.2" "pypinyin==0.50.0" "jieba==0.42.1" "cn2an==0.5.22"
+          pip install "librosa==0.9.1" "inflect==7.0.0" "unidecode==1.3.7" "eng_to_ipa==0.0.2" "pypinyin==0.50.0" "jieba==0.42.1" "cn2an==0.5.22"
           pip install -e ./OpenVoice --no-deps
-          python - <<'PY'
-from huggingface_hub import hf_hub_download
-for name in ["checkpoints/converter/config.json","checkpoints/converter/checkpoint.pth"]:
-    p=hf_hub_download(repo_id="myshell-ai/OpenVoice", filename=name, local_dir="OpenVoice")
-    print("OPENVOICE_FILE="+p)
-PY
+          curl -L --fail --retry 3 "https://myshell-public-repo-hosting.s3.amazonaws.com/openvoice/checkpoints_1226.zip" -o /tmp/openvoice_ckpt.zip
+          unzip -q /tmp/openvoice_ckpt.zip -d ./OpenVoice
+          test -f ./OpenVoice/checkpoints/converter/config.json
+          test -f ./OpenVoice/checkpoints/converter/checkpoint.pth
 
       - name: Download and normalize Mustapha reference
         run: |
