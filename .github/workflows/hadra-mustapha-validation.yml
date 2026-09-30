@@ -27,7 +27,7 @@ jobs:
       - name: Prepare pinned weights and existing own reference
         run: |
           python3 - <<'PY'
-          import urllib.request,json,pathlib,hashlib,subprocess
+          import urllib.request,json,pathlib,hashlib,wave,struct
           out=pathlib.Path("voice_validation")
           repo="rodrigomt/s2-pro-gguf"
           info=json.load(urllib.request.urlopen("https://huggingface.co/api/models/"+repo))
@@ -42,7 +42,15 @@ jobs:
               versions[name]=dict(bytes=pathlib.Path("/tmp/"+name).stat().st_size,sha256=h.hexdigest())
               out.joinpath("validation.json").write_text(json.dumps(versions,indent=2))
           urllib.request.urlretrieve("https://resource2.heygen.ai/audio/7fa5e8f14fd9486c98bab83932f35bca/original.wav","/tmp/mustapha_original.wav")
-          subprocess.run(["ffmpeg","-y","-ss","1.4","-i","/tmp/mustapha_original.wav","-t","5.4","-ac","1","-ar","44100","/tmp/mustapha_ref.wav"],check=True)
+          with wave.open("/tmp/mustapha_original.wav","rb") as w:
+              rate=w.getframerate();channels=w.getnchannels()
+              assert w.getsampwidth()==2 and channels==2
+              w.setpos(round(rate*1.4));raw=w.readframes(round(rate*5.4))
+          samples=struct.unpack("<"+"h"*(len(raw)//2),raw)
+          mono=[round((samples[i]+samples[i+1])/2) for i in range(0,len(samples),2)]
+          with wave.open("/tmp/mustapha_ref.wav","wb") as w:
+              w.setnchannels(1);w.setsampwidth(2);w.setframerate(rate)
+              w.writeframes(struct.pack("<"+"h"*len(mono),*mono))
           versions["reference"]=dict(source="existing own recording",start_seconds=1.4,duration_seconds=5.4,transcript="السلام خويا، كيداير؟ لاباس عليك؟ أنا مصطفى، والحمد لله كلشي مزيان.")
           versions["text"]="[excited] إيوا مصطفى، اليوم عندنا خبر زوين! [chuckle] ضحكتيني آ خويا. [sad] ولكن هاد الخبر الآخر حزني. [sigh] خليني ناخد نفس ونكمل."
           out.joinpath("validation.json").write_text(json.dumps(versions,ensure_ascii=False,indent=2))
