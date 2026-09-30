@@ -44,9 +44,24 @@ jobs:
           sf.write("/tmp/mustapha_ref.wav",audio,sr)
           print("REFERENCE_SECONDS",len(audio)/sr,flush=True)
           asr=pipeline("automatic-speech-recognition", model="openai/whisper-large-v3-turbo", device=-1)
-          ref_text=asr("/tmp/mustapha_ref.wav",generate_kwargs={"language":"ar","task":"transcribe"})["text"].strip()
-          print("REFERENCE_TRANSCRIPT",ref_text,flush=True)
-          assert len(ref_text)>24 and len(set(ref_text.split()))>4, "Reference transcript unreliable: inspect recording before synthesis"
+          alignment=asr("/tmp/mustapha_ref.wav",return_timestamps="word",generate_kwargs={"language":"ar","task":"transcribe"})
+          ref_text=alignment["text"].strip()
+          chunks=alignment.get("chunks",[])
+          boundaries=[x["timestamp"][1] for x in chunks if "عليك" in x["text"] and x["timestamp"][1] is not None]
+          assert boundaries, "Cannot align existing question: preserve baseline and inspect alignment"
+          split=float(boundaries[0])
+          assert 2.0 < split < 6.0, f"Unusable question boundary: {split}"
+          refs=[]
+          for label,start,end,target,seconds in [
+              ("question",0.0,split,"واش نخرجو نشربو شي أتاي؟",3.7),
+              ("statement",split,8.0,"من بعد نرجعو ونكملو الخدمة بشوية.",4.4)]:
+              clip=audio[int(start*sr):int(end*sr)]
+              path=f"/tmp/mustapha_{label}.wav"
+              sf.write(path,clip,sr)
+              transcript=asr(path,generate_kwargs={"language":"ar","task":"transcribe"})["text"].strip()
+              assert len(transcript)>10, f"Unusable {label} transcript"
+              refs.append(dict(label=label,path=path,transcript=transcript,start=start,end=end,target=target,generated_seconds=seconds))
+          print("ALIGNED_REFERENCES",json.dumps(refs,ensure_ascii=False),flush=True)
           del asr; gc.collect()
           from f5_tts.infer.utils_infer import load_model, load_vocoder
           from f5_tts.model import DiT
@@ -57,21 +72,21 @@ jobs:
           cfg=dict(dim=1024,depth=22,heads=16,ff_mult=2,text_dim=512,conv_layers=4)
           model=load_model(DiT,cfg,ckpt,vocab_file=vocab,device="cpu")
           vocoder=load_vocoder("vocos",device="cpu")
-          target="واش نخرجو نشربو شي أتاي؟ من بعد نرجعو ونكملو الخدمة بشوية."
+          import numpy as np
           started=time.time()
-          with torch.inference_mode():
-              wav,rate,_=infer_process("/tmp/mustapha_ref.wav",ref_text,target,model,vocoder,nfe_step=32,cfg_strength=2.0,sway_sampling_coef=-1.0,speed=0.95,fix_duration=16.0,device="cpu")
-          assert len(wav)>rate, "Output too short"
-          sf.write(OUT/"mustapha_hadra_new_sentence.wav",wav,rate)
-          meta={"model":repo,"reference_transcript_automatic_needs_verification":ref_text,"new_sentence":target,"rate":rate,"seconds":len(wav)/rate,"inference_seconds":time.time()-started,"accepted_by_user":False}
+          outputs=[]
+          for ref in refs:
+              torch.manual_seed(20260930)
+              with torch.inference_mode():
+                  wav,rate,_=infer_process(ref["path"],ref["transcript"],ref["target"],model,vocoder,nfe_step=32,cfg_strength=2.0,sway_sampling_coef=-1.0,speed=1.0,fix_duration=ref["end"]-ref["start"]+ref["generated_seconds"],device="cpu")
+              assert len(wav)>rate, "Output too short"
+              sf.write(OUT/f'mustapha_{ref["label"]}.wav',wav,rate)
+              outputs.append(wav)
+          wav=np.concatenate([outputs[0],np.zeros(int(rate*0.30)),outputs[1]])
+          sf.write(OUT/"mustapha_hadra_prosody_v1.wav",wav,rate)
+          meta={"model":repo,"method":"Question and statement conditioned on timestamp-aligned matching segments of existing own recording; no pitch processing","references":refs,"alignment":alignment,"rate":rate,"seconds":len(wav)/rate,"inference_seconds":time.time()-started,"accepted_by_user":False}
           (OUT/"validation.json").write_text(json.dumps(meta,ensure_ascii=False,indent=2))
           print(json.dumps(meta,ensure_ascii=False),flush=True)
-          del model,vocoder;gc.collect()
-          asr=pipeline("automatic-speech-recognition",model="openai/whisper-base",device=-1)
-          meta["output_transcript_advisory_only"]=asr(str(OUT/"mustapha_hadra_new_sentence.wav"),return_timestamps=True,generate_kwargs={"language":"ar","task":"transcribe"})["text"]
-          (OUT/"validation.json").write_text(json.dumps(meta,ensure_ascii=False,indent=2))
-          print("OUTPUT_TRANSCRIPT",meta["output_transcript_advisory_only"],flush=True)
-          
           PY
           python -u /tmp/validate_voice.py
       - name: Preserve audio and validation evidence
