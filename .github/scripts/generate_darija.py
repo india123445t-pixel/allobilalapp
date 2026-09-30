@@ -1,4 +1,14 @@
 import base64
+import torch
+
+# Coqui XTTS checkpoints are trusted model files. PyTorch 2.6+ / 2.14
+# defaults to weights_only=True, which blocks XTTS config objects.
+_orig_torch_load = torch.load
+def _xtts_compatible_load(*args, **kwargs):
+    kwargs.setdefault("weights_only", False)
+    return _orig_torch_load(*args, **kwargs)
+torch.load = _xtts_compatible_load
+
 from TTS.api import TTS
 
 TEXT = "آ خويا، اليوم الجو زوين، وأنا فرحان حيث أخيرًا الصوت ديالي ولى كيهضر معاك بالدارجة بشكل طبيعي."
