@@ -2,7 +2,6 @@ import base64, os, torch
 import numpy as np
 import soundfile as sf
 from transformers import VitsModel, AutoTokenizer
-from openvoice import se_extractor
 from openvoice.api import ToneColorConverter
 
 TEXT = "آ خويا مصطفى، شنو الأخبار؟ اليوم الجو زوين، وكلشي دايز مزيان. فرحان بزاف حيث دابا الصوت ديالي كيقدر يهضر معاك بالدارجة ديالنا."
@@ -25,11 +24,11 @@ print(f"DARIJA_BASE_READY={BASE_WAV} SR={model.config.sampling_rate} SAMPLES={wa
 
 device = "cpu"
 ckpt = "OpenVoice/checkpoints/converter"
-converter = ToneColorConverter(f"{ckpt}/config.json", device=device)
+converter = ToneColorConverter(f"{ckpt}/config.json", device=device, enable_watermark=False)
 converter.load_ckpt(f"{ckpt}/checkpoint.pth")
 
-source_se, _ = se_extractor.get_se(BASE_WAV, converter, target_dir="processed_source", vad=True)
-target_se, _ = se_extractor.get_se(REF, converter, target_dir="processed_target", vad=True)
+source_se = converter.extract_se([BASE_WAV])
+target_se = converter.extract_se([REF])
 
 converter.convert(
     audio_src_path=BASE_WAV,
