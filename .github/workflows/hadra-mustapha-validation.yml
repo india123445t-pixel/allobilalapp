@@ -44,8 +44,10 @@ jobs:
           sf.write("/tmp/mustapha_ref.wav",audio,sr)
           # Author code loads CPU checkpoints without map_location; make CPU portability explicit.
           src=Path("/tmp/lahgtna/src/chatterbox/mtl_tts.py")
-          code=src.read_text().replace("weights_only=True)","weights_only=True, map_location=device)")
+          code=src.read_text().replace('torch.load(ckpt_dir / "ve.pt", weights_only=True)', 'torch.load(ckpt_dir / "ve.pt", weights_only=True, map_location=device)')
+          code=code.replace('torch.load(ckpt_dir / "s3gen.pt", weights_only=True)', 'torch.load(ckpt_dir / "s3gen.pt", weights_only=True, map_location=device)')
           code=code.replace("max_new_tokens=1000","max_new_tokens=300")
+          compile(code,str(src),"exec")
           src.write_text(code)
           sys.path.insert(0,"/tmp/lahgtna")
           from src.chatterbox.mtl_tts import ChatterboxMultilingualTTS, ARABIC_DIALECTS_MAPPING
