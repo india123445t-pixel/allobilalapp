@@ -3,7 +3,7 @@ import outetts
 from outetts.models.config import GenerationConfig
 import wave
 import numpy as np
-import subprocess
+import base64
 
 MODEL_REPO = "KandirResearch/DarijaTTS-v0.1-500M"
 MODEL_FILE = "unsloth.Q8_0.gguf"
@@ -38,16 +38,9 @@ with wave.open("darija.wav", "wb") as wf:
 
 print(f"WAV_READY=darija.wav SR={audio.sr} SAMPLES={pcm.size}")
 
-subprocess.run(["git", "config", "user.name", "github-actions[bot]"], check=False)
-subprocess.run(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"], check=False)
-subprocess.run(["git", "add", "-f", "darija.wav"], check=False)
-subprocess.run(["git", "commit", "-m", "test: publish generated Darija WAV [skip ci]"], check=False)
-push = subprocess.run(
-    ["git", "push", "origin", "HEAD:temp/darija-tts-cloud-test"],
-    check=False,
-    capture_output=True,
-    text=True,
-)
-print(f"PUSH_RC={push.returncode}")
-print(push.stdout[-2000:])
-print(push.stderr[-2000:])
+data = base64.b64encode(open("darija.wav", "rb").read()).decode("ascii")
+chunk_size = 30000
+chunks = [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
+print(f"AUDIO_B64_COUNT={len(chunks)}")
+for i, chunk in enumerate(chunks):
+    print(f"AUDIO_B64_{i:02d}={chunk}")
