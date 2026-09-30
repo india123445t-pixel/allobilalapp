@@ -1,4 +1,4 @@
-name: Mustapha expressive Darija capability gate
+name: Mustapha five long Darija dialogue scenes
 on:
   push:
     branches: [temp/mustapha-hadra-validation]
@@ -9,8 +9,13 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        scene: [1, 2, 3, 4, 5]
     env:
+      SCENE_ID: "${{ matrix.scene }}"
       OMP_NUM_THREADS: "2"
       MKL_NUM_THREADS: "2"
       HF_HUB_DISABLE_PROGRESS_BARS: "1"
@@ -30,7 +35,7 @@ jobs:
       - name: Test actual expressive conditioning with existing own voice
         run: |
           cat > /tmp/expressive_gate.py <<'PY'
-          import sys, json, time, urllib.request, subprocess, gc, random
+          import sys, json, time, urllib.request, subprocess, gc, random, os
           from pathlib import Path
           import numpy as np, torch, soundfile as sf
           from huggingface_hub import hf_hub_download, model_info
@@ -62,30 +67,59 @@ jobs:
                   p=hf_hub_download(repo,name,revision=revision)
                   (root/name).symlink_to(p)
           model=ChatterboxMultilingualTTS.from_local(root,"cpu")
-          target="إيوا مصطفى، واجد نبداو؟ اليوم عندنا فكرة زوينة!"
-          results=[]
-          for name,exaggeration in [("calm",0.30),("lively",0.85)]:
-              random.seed(20260930);np.random.seed(20260930);torch.manual_seed(20260930)
+          scenes={
+              1: dict(label="مكالمة هاتفية ودية وحيوية",segments=[
+                  ("السلام عليكم، معاك مصطفى. لاباس عليك؟ واش الوقت مناسب نهضرو شوية على الموقع ديالك?",0.70),
+                  ("بغيت نفهم شنو محتاج بالضبط. واش غير صفحة بسيطة، ولا موقع فيه الخدمات والحجز?",0.55),
+                  ("مزيان، غادي نوجد ليك اقتراح واضح. ومن بعد نهضرو على التفاصيل، باش كلشي يكون مفهوم بيناتنا.",0.70)]),
+              2: dict(label="حزن ومواساة",segments=[
+                  ("صراحة، هاد الخبر حزني بزاف. كنت كنتمنى الأمور تمشي مزيان، ولكن اليوم ما جاتش كيف بغينا.",0.35),
+                  ("ما خاصكش تبقى بوحدك فهاد اللحظة. إلا بغيتي تهضر، أنا هنا نسمع ليك بشوية.",0.40),
+                  ("خود راحتك خويا، ما كاين حتى زربة. غادي نفكرو فالخطوة الجاية ملي تكون واجد.",0.45)]),
+              3: dict(label="قلق وتنبيه ثم طمأنة",segments=[
+                  ("تسنى شوية، راه هاد الرسالة مقلقاني. واش أنت اللي طلبتي هاد التغيير، ولا شي حد آخر?",0.65),
+                  ("خاصنا نتأكدو دابا قبل ما نكملو. رد بالك، ما تعطيني حتى معلومة حساسة فالهاتف.",0.70),
+                  ("واخا، فهمتك. غادي نراجعو الأمور وحدة بوحدة، وبشوية نعرفو شنو وقع وكيفاش نصلحوه.",0.40)]),
+              4: dict(label="سخرية خفيفة ومزاح وبهجة",segments=[
+                  ("آه، طبعاً، الحاسوب اختار يتعطل غير ملي بغينا نخدمو! عندو توقيت زوين، ما شاء الله.",0.65),
+                  ("إيوا دابا غادي نصيفطوه يشرب أتاي، ويمكن يرجع عندو النشاط! غير كنضحك معاك خويا.",0.80),
+                  ("يلا، بلا ما نزيدو نلوموه. نجربو حل بسيط، ومن بعد إلا خدم، نحتافلو بهاد الإنجاز الكبير!",0.75)]),
+              5: dict(label="تأثر وحزن شديد ثم تهدئة؛ البكاء الفعلي غير مثبت",segments=[
+                  ("سمح ليا، صعيب عليا نهضر على هاد الموضوع. بعض المرات الكلام كيوقف، وما كنلقاش شنو نقول.",0.65),
+                  ("هاد الذكريات عزيزة عليا بزاف. بغيت غير نسكت شوية، وناخد نفس، حتى نقدر نكمل.",0.55),
+                  ("شكراً حيث كتسمع ليا. دابا وليت أهدأ شوية، وغادي ناخد الوقت اللي محتاج بلا ضغط.",0.40)])
+          }
+          scene_id=int(os.environ["SCENE_ID"])
+          scene=scenes[scene_id]
+          results=[]; parts=[]
+          model.prepare_conditionals("/tmp/mustapha_ref.wav",exaggeration=0.50)
+          for index,(target,exaggeration) in enumerate(scene["segments"],1):
+              random.seed(20260930+index);np.random.seed(20260930+index);torch.manual_seed(20260930+index)
               started=time.time()
-              wav=model.generate(target,language_id="mo",audio_prompt_path="/tmp/mustapha_ref.wav",exaggeration=exaggeration,cfg_weight=0.35,temperature=0.70,repetition_penalty=2.0)
+              wav=model.generate(target,language_id="mo",exaggeration=exaggeration,cfg_weight=0.35,temperature=0.70,repetition_penalty=2.0)
               samples=wav.squeeze().numpy()
               seconds=len(samples)/model.sr
               assert 1.5<seconds<15.0 and np.isfinite(samples).all(), f"Invalid output duration/signal: {seconds}"
-              file=f"mustapha_lahgtna_{name}.wav"
+              file=f"scene_{scene_id}_part_{index}.wav"
               sf.write(OUT/file,samples,model.sr)
               entry=dict(file=file,text=target,requested_expressiveness=exaggeration,seconds=seconds,inference_seconds=time.time()-started,rate=model.sr)
-              results.append(entry);print("SAMPLE",json.dumps(entry,ensure_ascii=False),flush=True)
-              (OUT/"validation.json").write_text(json.dumps(dict(model="oddadmix/lahgtna-chatterbox-v1",versions=versions,code_commit="433cb74200b55457bffa8ee6965a02ecab546a1c",method="same text/seed/reference, actual emotion_adv contrast; not five verified semantic styles",results=results,accepted_by_user=False),ensure_ascii=False,indent=2))
+              results.append(entry);parts.append(samples)
+              print("SAMPLE",json.dumps(entry,ensure_ascii=False),flush=True)
+              (OUT/"validation.json").write_text(json.dumps(dict(scene_id=scene_id,label=scene["label"],model="oddadmix/lahgtna-chatterbox-v1",versions=versions,code_commit="433cb74200b55457bffa8ee6965a02ecab546a1c",method="dialogue meaning plus actual scalar emotion_adv conditioning; categorical moods not verified",literal_laughter_supported=False,literal_crying_supported=False,results=results,accepted_by_user=False),ensure_ascii=False,indent=2))
+          combined=[]
+          for index,p in enumerate(parts):
+              if index: combined.append(np.zeros(int(model.sr*0.35)))
+              combined.append(p)
+          sf.write(OUT/f"mustapha_scene_{scene_id}.wav",np.concatenate(combined),model.sr)
+          print("SCENE_COMPLETE",scene_id,flush=True)
           del model;gc.collect()
-          calm,_=sf.read(OUT/results[0]["file"]);lively,_=sf.read(OUT/results[1]["file"])
-          sf.write(OUT/"mustapha_expressive_comparison.wav",np.concatenate([calm,np.zeros(int(sr*1.0)),lively]),sr)
           PY
           python -u /tmp/expressive_gate.py
       - name: Preserve validation evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mustapha-expressive-gate
+          name: mustapha-long-scene-${{ matrix.scene }}
           path: voice_validation/
           retention-days: 3
           if-no-files-found: warn
