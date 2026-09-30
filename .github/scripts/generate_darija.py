@@ -12,17 +12,17 @@ model_path = hf_hub_download(repo_id=MODEL_REPO, filename=MODEL_FILE)
 
 cfg = outetts.GGUFModelConfig_v2(
     model_path=model_path,
-    tokenizer_path="Lyte/DarijaTTS",
+    tokenizer_path="KandirResearch/DarijaTTS-v0.1-500M",
     verbose=False,
 )
 
 interface = outetts.InterfaceGGUF(model_version="0.3", cfg=cfg)
 
 gen = GenerationConfig(
-    text="السلام خويا، كيداير؟ لاباس عليك؟",
+    text="السلام خويا مصطفى، لاباس عليك؟ كلشي مزيان؟ وصحة، لاباس.",
     temperature=0.3,
     repetition_penalty=1.1,
-    max_length=512,
+    max_length=4096,
     speaker=None,
 )
 
