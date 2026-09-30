@@ -1,39 +1,19 @@
-import base64, wave
-import numpy as np
-import torch
-import outetts
-from outetts.models.config import GenerationConfig
+import base64
+from TTS.api import TTS
 
-MODEL_REPO = "KandirResearch/DarijaTTS-v0.1-500M"
+TEXT = "آ خويا، اليوم الجو زوين، وأنا فرحان حيث أخيرًا الصوت ديالي ولى كيهضر معاك بالدارجة بشكل طبيعي."
 
-model_config = outetts.HFModelConfig_v2(
-    model_path=MODEL_REPO,
-    tokenizer_path=MODEL_REPO,
-    device="cpu",
-    dtype=torch.float32,
-    max_seq_length=4096,
+tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2", progress_bar=False, gpu=False)
+tts.tts_to_file(
+    text=TEXT,
+    speaker_wav="mustapha_ref.wav",
+    language="ar",
+    file_path="mustapha_clone_test.wav",
 )
-interface = outetts.InterfaceHF(model_version="0.3", cfg=model_config)
 
-gen_cfg = GenerationConfig(
-    text="السلام خويا مصطفى، لاباس عليك؟ كلشي مزيان؟ وصحة، لاباس.",
-    temperature=0.3,
-    repetition_penalty=1.1,
-    max_length=4096,
-)
-output = interface.generate(config=gen_cfg)
-
-samples = output.audio.detach().cpu().squeeze().float().clamp(-1,1).numpy()
-pcm = (samples * 32767.0).astype(np.int16)
-with wave.open("darija.wav","wb") as wf:
-    wf.setnchannels(1)
-    wf.setsampwidth(2)
-    wf.setframerate(output.sr)
-    wf.writeframes(pcm.tobytes())
-
-print(f"HF_WAV_READY=darija.wav SR={output.sr} SAMPLES={pcm.size}")
-data=base64.b64encode(open("darija.wav","rb").read()).decode("ascii")
+data = base64.b64encode(open("mustapha_clone_test.wav","rb").read()).decode("ascii")
 chunks=[data[i:i+30000] for i in range(0,len(data),30000)]
-print(f"AUDIO_B64_COUNT={len(chunks)}")
+print(f"CLONE_B64_COUNT={len(chunks)}")
 for i,ch in enumerate(chunks):
-    print(f"AUDIO_B64_{i:02d}={ch}")
+    print(f"CLONE_B64_{i:03d}={ch}")
+print("VOICE_CLONE_READY=mustapha_clone_test.wav")
