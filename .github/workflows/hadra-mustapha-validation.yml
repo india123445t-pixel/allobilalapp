@@ -1,4 +1,4 @@
-name: Mustapha five long Darija dialogue scenes
+name: Mustapha S2 expressive identity controlled gate
 on:
   push:
     branches: [temp/mustapha-hadra-validation]
@@ -9,117 +9,64 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        scene: [1, 2, 3, 4, 5]
+    timeout-minutes: 25
     env:
-      SCENE_ID: "${{ matrix.scene }}"
-      OMP_NUM_THREADS: "2"
-      MKL_NUM_THREADS: "2"
-      HF_HUB_DISABLE_PROGRESS_BARS: "1"
+      OMP_NUM_THREADS: "4"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install isolated expressive CPU runtime
+      - name: Build pinned native CPU runtime
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg
-          pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
-          pip install resampy==0.4.3 librosa==0.10.2.post1 s3tokenizer transformers==4.46.3 diffusers==0.29.0 omegaconf==2.3.0 resemble-perth==1.0.1 silero-vad==5.1.2 conformer==0.3.2 safetensors numpy==1.26.4 huggingface_hub soundfile
-          git clone https://github.com/Oddadmix/lahgtna-chatterbox.git /tmp/lahgtna
-          git -C /tmp/lahgtna checkout 433cb74200b55457bffa8ee6965a02ecab546a1c
-      - name: Test actual expressive conditioning with existing own voice
+          mkdir -p voice_validation
+          free -m
+          git clone --recurse-submodules https://github.com/rodrigomatta/s2.cpp.git /tmp/s2
+          git -C /tmp/s2 checkout 2c33261938da1a41d713768b1b391b4d368d7d2c
+          git -C /tmp/s2 submodule update --init --recursive
+          cmake -S /tmp/s2 -B /tmp/s2/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build /tmp/s2/build --parallel 4
+          /tmp/s2/build/s2 --help
+      - name: Prepare pinned weights and existing own reference
         run: |
-          cat > /tmp/expressive_gate.py <<'PY'
-          import sys, json, time, urllib.request, subprocess, gc, random, os
-          from pathlib import Path
-          import numpy as np, torch, soundfile as sf
-          from huggingface_hub import hf_hub_download, model_info
-          torch.set_num_threads(2)
-          OUT=Path("voice_validation"); OUT.mkdir(exist_ok=True)
-          urllib.request.urlretrieve("https://resource2.heygen.ai/audio/7fa5e8f14fd9486c98bab83932f35bca/original.wav","/tmp/mustapha_raw.wav")
-          subprocess.run(["ffmpeg","-y","-ss","1.40","-i","/tmp/mustapha_raw.wav","-ac","1","-ar","24000","-t","8","/tmp/mustapha_ref.wav"],check=True)
-          audio,sr=sf.read("/tmp/mustapha_ref.wav")
-          assert len(audio)==8*sr and np.sqrt(np.mean(audio**2))>0.002, "Invalid reference signal"
-          audio=audio/max(float(np.max(np.abs(audio))),0.001)*0.85
-          sf.write("/tmp/mustapha_ref.wav",audio,sr)
-          # Author code loads CPU checkpoints without map_location; make CPU portability explicit.
-          src=Path("/tmp/lahgtna/src/chatterbox/mtl_tts.py")
-          code=src.read_text().replace('torch.load(ckpt_dir / "ve.pt", weights_only=True)', 'torch.load(ckpt_dir / "ve.pt", weights_only=True, map_location=device)')
-          code=code.replace('torch.load(ckpt_dir / "s3gen.pt", weights_only=True)', 'torch.load(ckpt_dir / "s3gen.pt", weights_only=True, map_location=device)')
-          code=code.replace("max_new_tokens=1000","max_new_tokens=300")
-          compile(code,str(src),"exec")
-          src.write_text(code)
-          sys.path.insert(0,"/tmp/lahgtna")
-          from src.chatterbox.mtl_tts import ChatterboxMultilingualTTS, ARABIC_DIALECTS_MAPPING
-          assert ARABIC_DIALECTS_MAPPING["mo"]=="pl", "Moroccan routing changed"
-          root=Path("/tmp/checkpoints"); root.mkdir()
-          versions={}
-          for repo,files in [
-              ("ResembleAI/chatterbox",["ve.pt","s3gen.pt","grapheme_mtl_merged_expanded_v1.json","Cangjie5_TC.json"]),
-              ("oddadmix/lahgtna-chatterbox-v1",["t3_mtl23ls_v2.safetensors"])]:
-              revision=model_info(repo).sha; versions[repo]=revision
-              for name in files:
-                  p=hf_hub_download(repo,name,revision=revision)
-                  (root/name).symlink_to(p)
-          model=ChatterboxMultilingualTTS.from_local(root,"cpu")
-          scenes={
-              1: dict(label="مكالمة هاتفية ودية وحيوية",segments=[
-                  ("السلام عليكم، معاك مصطفى. لاباس عليك؟ واش الوقت مناسب نهضرو شوية على الموقع ديالك?",0.70),
-                  ("بغيت نفهم شنو محتاج بالضبط. واش غير صفحة بسيطة، ولا موقع فيه الخدمات والحجز?",0.55),
-                  ("مزيان، غادي نوجد ليك اقتراح واضح. ومن بعد نهضرو على التفاصيل، باش كلشي يكون مفهوم بيناتنا.",0.70)]),
-              2: dict(label="حزن ومواساة",segments=[
-                  ("صراحة، هاد الخبر حزني بزاف. كنت كنتمنى الأمور تمشي مزيان، ولكن اليوم ما جاتش كيف بغينا.",0.35),
-                  ("ما خاصكش تبقى بوحدك فهاد اللحظة. إلا بغيتي تهضر، أنا هنا نسمع ليك بشوية.",0.40),
-                  ("خود راحتك خويا، ما كاين حتى زربة. غادي نفكرو فالخطوة الجاية ملي تكون واجد.",0.45)]),
-              3: dict(label="قلق وتنبيه ثم طمأنة",segments=[
-                  ("تسنى شوية، راه هاد الرسالة مقلقاني. واش أنت اللي طلبتي هاد التغيير، ولا شي حد آخر?",0.65),
-                  ("خاصنا نتأكدو دابا قبل ما نكملو. رد بالك، ما تعطيني حتى معلومة حساسة فالهاتف.",0.70),
-                  ("واخا، فهمتك. غادي نراجعو الأمور وحدة بوحدة، وبشوية نعرفو شنو وقع وكيفاش نصلحوه.",0.40)]),
-              4: dict(label="سخرية خفيفة ومزاح وبهجة",segments=[
-                  ("آه، طبعاً، الحاسوب اختار يتعطل غير ملي بغينا نخدمو! عندو توقيت زوين، ما شاء الله.",0.65),
-                  ("إيوا دابا غادي نصيفطوه يشرب أتاي، ويمكن يرجع عندو النشاط! غير كنضحك معاك خويا.",0.80),
-                  ("يلا، بلا ما نزيدو نلوموه. نجربو حل بسيط، ومن بعد إلا خدم، نحتافلو بهاد الإنجاز الكبير!",0.75)]),
-              5: dict(label="تأثر وحزن شديد ثم تهدئة؛ البكاء الفعلي غير مثبت",segments=[
-                  ("سمح ليا، صعيب عليا نهضر على هاد الموضوع. بعض المرات الكلام كيوقف، وما كنلقاش شنو نقول.",0.65),
-                  ("هاد الذكريات عزيزة عليا بزاف. بغيت غير نسكت شوية، وناخد نفس، حتى نقدر نكمل.",0.55),
-                  ("شكراً حيث كتسمع ليا. دابا وليت أهدأ شوية، وغادي ناخد الوقت اللي محتاج بلا ضغط.",0.40)])
-          }
-          scene_id=int(os.environ["SCENE_ID"])
-          scene=scenes[scene_id]
-          results=[]; parts=[]
-          model.prepare_conditionals("/tmp/mustapha_ref.wav",exaggeration=0.50)
-          for index,(target,exaggeration) in enumerate(scene["segments"],1):
-              random.seed(20260930+index);np.random.seed(20260930+index);torch.manual_seed(20260930+index)
-              started=time.time()
-              wav=model.generate(target,language_id="mo",exaggeration=exaggeration,cfg_weight=0.35,temperature=0.70,repetition_penalty=2.0)
-              samples=wav.squeeze().numpy()
-              seconds=len(samples)/model.sr
-              assert 1.5<seconds<15.0 and np.isfinite(samples).all(), f"Invalid output duration/signal: {seconds}"
-              file=f"scene_{scene_id}_part_{index}.wav"
-              sf.write(OUT/file,samples,model.sr)
-              entry=dict(file=file,text=target,requested_expressiveness=exaggeration,seconds=seconds,inference_seconds=time.time()-started,rate=model.sr)
-              results.append(entry);parts.append(samples)
-              print("SAMPLE",json.dumps(entry,ensure_ascii=False),flush=True)
-              (OUT/"validation.json").write_text(json.dumps(dict(scene_id=scene_id,label=scene["label"],model="oddadmix/lahgtna-chatterbox-v1",versions=versions,code_commit="433cb74200b55457bffa8ee6965a02ecab546a1c",method="dialogue meaning plus actual scalar emotion_adv conditioning; categorical moods not verified",literal_laughter_supported=False,literal_crying_supported=False,results=results,accepted_by_user=False),ensure_ascii=False,indent=2))
-          combined=[]
-          for index,p in enumerate(parts):
-              if index: combined.append(np.zeros(int(model.sr*0.35)))
-              combined.append(p)
-          sf.write(OUT/f"mustapha_scene_{scene_id}.wav",np.concatenate(combined),model.sr)
-          print("SCENE_COMPLETE",scene_id,flush=True)
-          del model;gc.collect()
+          python3 - <<'PY'
+          import urllib.request,json,pathlib,hashlib,subprocess
+          out=pathlib.Path("voice_validation")
+          repo="rodrigomt/s2-pro-gguf"
+          info=json.load(urllib.request.urlopen("https://huggingface.co/api/models/"+repo))
+          rev=info["sha"]
+          versions=dict(model=repo,revision=rev,code_commit="2c33261938da1a41d713768b1b391b4d368d7d2c",accepted_by_user=False)
+          out.joinpath("validation.json").write_text(json.dumps(versions,indent=2))
+          for name in ["s2-pro-q6_k.gguf","tokenizer.json"]:
+              urllib.request.urlretrieve("https://huggingface.co/"+repo+"/resolve/"+rev+"/"+name,"/tmp/"+name)
+              h=hashlib.sha256()
+              with open("/tmp/"+name,"rb") as f:
+                  for b in iter(lambda:f.read(1048576),b""):h.update(b)
+              versions[name]=dict(bytes=pathlib.Path("/tmp/"+name).stat().st_size,sha256=h.hexdigest())
+              out.joinpath("validation.json").write_text(json.dumps(versions,indent=2))
+          urllib.request.urlretrieve("https://resource2.heygen.ai/audio/7fa5e8f14fd9486c98bab83932f35bca/original.wav","/tmp/mustapha_original.wav")
+          subprocess.run(["ffmpeg","-y","-ss","1.4","-i","/tmp/mustapha_original.wav","-t","5.4","-ac","1","-ar","44100","/tmp/mustapha_ref.wav"],check=True)
+          versions["reference"]=dict(source="existing own recording",start_seconds=1.4,duration_seconds=5.4,transcript="السلام خويا، كيداير؟ لاباس عليك؟ أنا مصطفى، والحمد لله كلشي مزيان.")
+          versions["text"]="[excited] إيوا مصطفى، اليوم عندنا خبر زوين! [chuckle] ضحكتيني آ خويا. [sad] ولكن هاد الخبر الآخر حزني. [sigh] خليني ناخد نفس ونكمل."
+          out.joinpath("validation.json").write_text(json.dumps(versions,ensure_ascii=False,indent=2))
           PY
-          python -u /tmp/expressive_gate.py
-      - name: Preserve validation evidence
+      - name: One controlled Darija voice clone with real inline performance cues
+        run: |
+          set -o pipefail
+          timeout 900 /tmp/s2/build/s2 --model /tmp/s2-pro-q6_k.gguf --tokenizer /tmp/tokenizer.json --prompt-audio /tmp/mustapha_ref.wav --prompt-text "السلام خويا، كيداير؟ لاباس عليك؟ أنا مصطفى، والحمد لله كلشي مزيان." --text "[excited] إيوا مصطفى، اليوم عندنا خبر زوين! [chuckle] ضحكتيني آ خويا. [sad] ولكن هاد الخبر الآخر حزني. [sigh] خليني ناخد نفس ونكمل." --threads 4 --max-tokens 512 --temperature 0.7 --top-p 0.7 --codec-cpu --output voice_validation/mustapha_s2_expressive.wav 2>&1 | tee voice_validation/inference.log
+          python3 - <<'PY'
+          import wave,json,pathlib,struct,math
+          p=pathlib.Path("voice_validation")
+          with wave.open(str(p/"mustapha_s2_expressive.wav")) as w:
+              info=dict(rate=w.getframerate(),channels=w.getnchannels(),width=w.getsampwidth(),frames=w.getnframes())
+              info["seconds"]=info["frames"]/info["rate"]
+              assert 1<info["seconds"]<40,info
+          v=json.loads((p/"validation.json").read_text());v["output"]=info
+          (p/"validation.json").write_text(json.dumps(v,ensure_ascii=False,indent=2))
+          print("AUDIO_READY",info)
+          PY
+      - name: Preserve evidence and output
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mustapha-long-scene-${{ matrix.scene }}
+          name: mustapha-s2-expressive-gate
           path: voice_validation/
           retention-days: 3
           if-no-files-found: warn
