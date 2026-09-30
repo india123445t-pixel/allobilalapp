@@ -1,4 +1,4 @@
-name: Mustapha Voice Clone Test
+name: Mustapha Moroccan Voice Pipeline
 
 on:
   push:
@@ -9,23 +9,25 @@ on:
 jobs:
   tts:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-    env:
-      COQUI_TOS_AGREED: "1"
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.9"
 
       - name: Install runtime
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg unzip
           python -m pip install --upgrade pip
-          pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.5.1" "torchaudio==2.5.1"
-          pip install "TTS==0.22.0" "transformers==4.38.2" "tokenizers==0.15.2"
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.1.2" "torchaudio==2.1.2"
+          pip install "transformers==4.49.0" accelerate scipy soundfile sentencepiece
+          git clone --depth 1 https://github.com/myshell-ai/OpenVoice.git
+          pip install -e ./OpenVoice
+          curl -L --fail --retry 3 https://myshell-public-repo-hosting.s3.amazonaws.com/openvoice/checkpoints_1226.zip -o /tmp/openvoice_ckpt.zip
+          unzip -q /tmp/openvoice_ckpt.zip -d ./OpenVoice
 
       - name: Download and normalize Mustapha reference
         run: |
@@ -33,12 +35,14 @@ jobs:
           ffmpeg -y -i mustapha_ref_raw.wav -ac 1 -ar 22050 -t 30 mustapha_ref.wav
           ls -lh mustapha_ref.wav
 
-      - name: Generate cloned Darija audio
+      - name: Generate Moroccan pronunciation and transfer Mustapha voice
         run: python .github/scripts/generate_darija.py
 
-      - name: Upload cloned WAV
+      - name: Upload comparison WAVs
         uses: actions/upload-artifact@v4
         with:
-          name: mustapha-clone-test
-          path: mustapha_clone_test.wav
+          name: mustapha-moroccan-voice-test
+          path: |
+            darija_base.wav
+            mustapha_darija_clone.wav
           if-no-files-found: error
